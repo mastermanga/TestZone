@@ -35,26 +35,36 @@
           'rel': 0, // Pas de vidéos suggérées à la fin
           'fs': 0, // Désactiver le mode plein écran
           'iv_load_policy': 3, // Désactiver les annotations
-          'cc_load_policy': 0 // Désactiver les sous-titres
+          'cc_load_policy': 0, // Désactiver les sous-titres
+          'enablejsapi': 1, // Permet l'utilisation de l'API JavaScript
+          'disablekb': 1, // Désactive les raccourcis clavier
+          'playlist': 'hI9p5QfdWeE', // Empêche la vidéo de se répéter (option playlist)
+          'start': 60 // Démarre la vidéo à 60 secondes (1 minute)
         },
         events: {
-          'onReady': onPlayerReady
+          'onReady': onPlayerReady,
+          'onStateChange': onPlayerStateChange
         }
       });
     }
 
     // Fonction appelée quand le lecteur est prêt
     function onPlayerReady(event) {
-      // Démarrer la vidéo à 1 minute (60 secondes)
-      player.seekTo(60); // Démarre la vidéo à 60 secondes (1 minute)
-
       // Démarrer la vidéo
       player.playVideo();
 
-      // Arrêter la vidéo après 15 secondes (après 1 minute + 15 secondes)
+      // Arrêter la vidéo après 15 secondes
       setTimeout(function() {
         player.pauseVideo(); // Mettre la vidéo en pause après 15 secondes
       }, 15000); // 15000ms = 15 secondes
+    }
+
+    // Fonction pour gérer les changements d'état du lecteur
+    function onPlayerStateChange(event) {
+      // Si la vidéo est terminée, on la met en pause et on réinitialise l'interface
+      if (event.data == YT.PlayerState.ENDED) {
+        player.stopVideo(); // Arrête la vidéo une fois terminée
+      }
     }
   </script>
 </body>
