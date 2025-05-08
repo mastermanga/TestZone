@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vidéo YouTube - Démarrage à 1 minute</title>
+  <script src="https://www.youtube.com/iframe_api"></script>
+  <style>
+    /* Cacher l'iframe de YouTube et l'interface */
+    #player {
+      pointer-events: none; /* Empêche les clics sur le lecteur */
+      border: none; /* Enlever la bordure */
+      width: 560px;
+      height: 315px;
+    }
+  </style>
+</head>
+<body>
+  <div id="player"></div>
+  
+  <script>
+    // Fonction pour créer et charger le lecteur YouTube
+    var player;
+
+    function onYouTubeIframeAPIReady() {
+      player = new YT.Player('player', {
+        height: '315',
+        width: '560',
+        videoId: 'hI9p5QfdWeE', // ID de la vidéo YouTube
+        playerVars: {
+          'autohide': 1, // Masquer les contrôles de la vidéo
+          'modestbranding': 1, // Masquer le titre et le logo YouTube
+          'showinfo': 0, // Masquer les infos sur la vidéo
+          'controls': 0, // Pas de contrôles visibles
+          'rel': 0, // Pas de vidéos suggérées à la fin
+          'fs': 0 // Désactiver le mode plein écran
+        },
+        events: {
+          'onReady': onPlayerReady
+        }
+      });
+    }
+
+    // Fonction appelée quand le lecteur est prêt
+    function onPlayerReady(event) {
+      // Démarrer la vidéo à 1 minute (60 secondes)
+      player.seekTo(60); // Démarre la vidéo à 60 secondes (1 minute)
+
+      // Démarrer la vidéo
+      player.playVideo();
+
+      // Arrêter la vidéo après 15 secondes (après 1 minute + 15 secondes)
+      setTimeout(function() {
+        player.pauseVideo(); // Mettre la vidéo en pause après 15 secondes
+      }, 15000); // 15000ms = 15 secondes
+    }
+  </script>
+</body>
+</html>
