@@ -30,10 +30,12 @@
         playerVars: {
           'autohide': 1, // Masquer les contrôles de la vidéo
           'modestbranding': 1, // Masquer le titre et le logo YouTube
-          'showinfo': 0, // Masquer les infos sur la vidéo
+          'showinfo': 0, // Masquer les infos sur la vidéo (y compris le titre)
           'controls': 0, // Pas de contrôles visibles
           'rel': 0, // Pas de vidéos suggérées à la fin
-          'fs': 0 // Désactiver le mode plein écran
+          'fs': 0, // Désactiver le mode plein écran
+          'iv_load_policy': 3, // Désactiver les annotations
+          'cc_load_policy': 0 // Désactiver les sous-titres
         },
         events: {
           'onReady': onPlayerReady
