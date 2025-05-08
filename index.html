@@ -3,75 +3,153 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Vidéo YouTube - Démarrage à 1 minute</title>
-  <script src="https://www.youtube.com/iframe_api"></script>
+  <title>Quiz d'Openings d'Anime</title>
   <style>
-    /* Cacher l'iframe de YouTube et l'interface */
-    #player {
-      pointer-events: none; /* Empêche les clics sur le lecteur */
-      border: none; /* Enlever la bordure */
-      width: 560px;
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background-color: #f0f0f0;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      color: #333;
+    }
+    #video-container {
+      margin: 20px auto;
+      max-width: 560px;
+    }
+    #video-player {
+      width: 100%;
       height: 315px;
+    }
+    .choice-btn {
+      display: block;
+      margin: 10px auto;
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      width: 200px;
+    }
+    .choice-btn:hover {
+      background-color: #0056b3;
+    }
+    #next-btn {
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      display: none;
+    }
+    #next-btn:hover {
+      background-color: #218838;
+    }
+    p {
+      font-size: 18px;
+      margin: 20px 0;
     }
   </style>
 </head>
 <body>
-  <div id="player"></div>
+  <h1>Quiz d'Openings d'Anime</h1>
+  <div id="video-container">
+    <iframe id="video-player" frameborder="0" allowfullscreen></iframe>
+  </div>
+  <div id="choices">
+    <button class="choice-btn"></button>
+    <button class="choice-btn"></button>
+    <button class="choice-btn"></button>
+    <button class="choice-btn"></button>
+  </div>
+  <p>Score : <span id="score">0</span></p>
+  <button id="next-btn">Question suivante</button>
 
   <script>
-    // Vérification si l'API YouTube est bien chargée
-    var player;
-
-    function onYouTubeIframeAPIReady() {
-      console.log('L\'API YouTube est prête !');
-      player = new YT.Player('player', {
-        height: '315',
-        width: '560',
-        videoId: 'hI9p5QfdWeE', // ID de la vidéo YouTube
-        playerVars: {
-          'autohide': 1, // Masquer les contrôles de la vidéo
-          'modestbranding': 1, // Masquer le titre et le logo YouTube
-          'showinfo': 0, // Masquer les infos sur la vidéo (y compris le titre)
-          'controls': 0, // Pas de contrôles visibles
-          'rel': 0, // Pas de vidéos suggérées à la fin
-          'fs': 0, // Désactiver le mode plein écran
-          'iv_load_policy': 3, // Désactiver les annotations
-          'cc_load_policy': 0, // Désactiver les sous-titres
-          'enablejsapi': 1, // Permet l'utilisation de l'API JavaScript
-          'disablekb': 1, // Désactive les raccourcis clavier
-          'start': 60 // Démarre la vidéo à 60 secondes (1 minute)
-        },
-        events: {
-          'onReady': onPlayerReady,
-          'onStateChange': onPlayerStateChange
-        }
-      });
-    }
-
-    function onPlayerReady(event) {
-      console.log('Le lecteur est prêt. La vidéo commence à 1 minute.');
-      player.playVideo(); // Démarre la vidéo
-
-      // Arrêter la vidéo après 15 secondes
-      setTimeout(function() {
-        console.log('La vidéo est en pause après 15 secondes.');
-        player.pauseVideo(); // Mettre la vidéo en pause après 15 secondes
-      }, 15000); // 15000ms = 15 secondes
-    }
-
-    // Fonction pour gérer les changements d'état du lecteur
-    function onPlayerStateChange(event) {
-      // Si la vidéo est terminée, on la met en pause et on réinitialise l'interface
-      if (event.data == YT.PlayerState.ENDED) {
-        console.log('La vidéo est terminée.');
-        player.stopVideo(); // Arrête la vidéo une fois terminée
+    // Données des openings (simulées, remplace VIDEO_ID par des ID YouTube réels)
+    const openings = [
+      {
+        id: 1,
+        anime: "Attack on Titan",
+        opening: "Guren no Yumiya",
+        videoUrl: "https://www.youtube.com/embed/QB4uEyCb5iI?start=0&end=15", // Exemple d'ID
+        choices: ["Attack on Titan", "Naruto", "One Piece", "Death Note"]
+      },
+      {
+        id: 2,
+        anime: "Naruto",
+        opening: "Blue Bird",
+        videoUrl: "https://www.youtube.com/embed/1j_g5n3mH80?start=0&end=15", // Exemple d'ID
+        choices: ["Naruto", "Bleach", "Fairy Tail", "My Hero Academia"]
       }
+      // Ajoute plus d'openings ici
+    ];
+
+    let score = 0;
+    let currentQuestionIndex = 0;
+
+    // Éléments du DOM
+    const videoPlayer = document.getElementById('video-player');
+    const choiceButtons = document.querySelectorAll('.choice-btn');
+    const nextButton = document.getElementById('next-btn');
+    const scoreDisplay = document.getElementById('score');
+
+    // Fonction pour charger une question
+    function loadQuestion(index) {
+      const currentOpening = openings[index];
+
+      // Charger la vidéo
+      videoPlayer.src = currentOpening.videoUrl;
+
+      // Charger les choix
+      currentOpening.choices.forEach((choice, i) => {
+        choiceButtons[i].textContent = choice;
+        choiceButtons[i].onclick = () => checkAnswer(choice, currentOpening.anime);
+      });
+
+      // Masquer le bouton "Suivant"
+      nextButton.style.display = 'none';
     }
 
-    // Si l'API ne se charge pas, afficher un message d'erreur
-    function onYouTubeIframeAPIFailure() {
-      console.error('Échec du chargement de l\'API YouTube.');
+    // Vérifier la réponse
+    function checkAnswer(selected, correct) {
+      if (selected === correct) {
+        score++;
+        scoreDisplay.textContent = score;
+        alert('Bonne réponse !');
+      } else {
+        alert(`Mauvaise réponse ! La bonne réponse était : ${correct}`);
+      }
+
+      // Afficher le bouton "Suivant"
+      nextButton.style.display = 'block';
+
+      // Arrêter la vidéo
+      videoPlayer.src = ''; // Réinitialiser pour arrêter
     }
+
+    // Passer à la question suivante
+    nextButton.onclick = () => {
+      currentQuestionIndex++;
+      if (currentQuestionIndex < openings.length) {
+        loadQuestion(currentQuestionIndex);
+      } else {
+        alert(`Quiz terminé ! Votre score : ${score}/${openings.length}`);
+        score = 0;
+        currentQuestionIndex = 0;
+        scoreDisplay.textContent = score;
+        loadQuestion(currentQuestionIndex);
+      }
+    };
+
+    // Charger la première question
+    loadQuestion(currentQuestionIndex);
   </script>
 </body>
 </html>
