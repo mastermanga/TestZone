@@ -17,12 +17,13 @@
 </head>
 <body>
   <div id="player"></div>
-  
+
   <script>
-    // Fonction pour créer et charger le lecteur YouTube
+    // Vérification si l'API YouTube est bien chargée
     var player;
 
     function onYouTubeIframeAPIReady() {
+      console.log('L\'API YouTube est prête !');
       player = new YT.Player('player', {
         height: '315',
         width: '560',
@@ -38,7 +39,6 @@
           'cc_load_policy': 0, // Désactiver les sous-titres
           'enablejsapi': 1, // Permet l'utilisation de l'API JavaScript
           'disablekb': 1, // Désactive les raccourcis clavier
-          'playlist': 'hI9p5QfdWeE', // Empêche la vidéo de se répéter (option playlist)
           'start': 60 // Démarre la vidéo à 60 secondes (1 minute)
         },
         events: {
@@ -48,13 +48,13 @@
       });
     }
 
-    // Fonction appelée quand le lecteur est prêt
     function onPlayerReady(event) {
-      // Démarrer la vidéo
-      player.playVideo();
+      console.log('Le lecteur est prêt. La vidéo commence à 1 minute.');
+      player.playVideo(); // Démarre la vidéo
 
       // Arrêter la vidéo après 15 secondes
       setTimeout(function() {
+        console.log('La vidéo est en pause après 15 secondes.');
         player.pauseVideo(); // Mettre la vidéo en pause après 15 secondes
       }, 15000); // 15000ms = 15 secondes
     }
@@ -63,8 +63,14 @@
     function onPlayerStateChange(event) {
       // Si la vidéo est terminée, on la met en pause et on réinitialise l'interface
       if (event.data == YT.PlayerState.ENDED) {
+        console.log('La vidéo est terminée.');
         player.stopVideo(); // Arrête la vidéo une fois terminée
       }
+    }
+
+    // Si l'API ne se charge pas, afficher un message d'erreur
+    function onYouTubeIframeAPIFailure() {
+      console.error('Échec du chargement de l\'API YouTube.');
     }
   </script>
 </body>
