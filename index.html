@@ -1,155 +1,87 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quiz d'Openings d'Anime</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      background-color: #f0f0f0;
-      margin: 0;
-      padding: 20px;
-    }
-    h1 {
-      color: #333;
-    }
-    #video-container {
-      margin: 20px auto;
-      max-width: 560px;
-    }
-    #video-player {
-      width: 100%;
-      height: 315px;
-    }
-    .choice-btn {
-      display: block;
-      margin: 10px auto;
-      padding: 10px 20px;
-      font-size: 16px;
-      background-color: #007bff;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      width: 200px;
-    }
-    .choice-btn:hover {
-      background-color: #0056b3;
-    }
-    #next-btn {
-      padding: 10px 20px;
-      font-size: 16px;
-      background-color: #28a745;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      display: none;
-    }
-    #next-btn:hover {
-      background-color: #218838;
-    }
-    p {
-      font-size: 18px;
-      margin: 20px 0;
-    }
-  </style>
-</head>
-<body>
-  <h1>Quiz d'Openings d'Anime</h1>
-  <div id="video-container">
-    <iframe id="video-player" frameborder="0" allowfullscreen></iframe>
-  </div>
-  <div id="choices">
-    <button class="choice-btn"></button>
-    <button class="choice-btn"></button>
-    <button class="choice-btn"></button>
-    <button class="choice-btn"></button>
-  </div>
-  <p>Score : <span id="score">0</span></p>
-  <button id="next-btn">Question suivante</button>
+// Variables globales
+let currentQuestion = 0;
+let score = 0;
+let questions = [];
 
-  <script>
-    // Données des openings (simulées, remplace VIDEO_ID par des ID YouTube réels)
-    const openings = [
-      {
-        id: 1,
-        anime: "Attack on Titan",
-        opening: "Guren no Yumiya",
-        videoUrl: "https://www.youtube.com/embed/kcgRNwYgqGk?si=vNOMFArp95OXMSOm", // Exemple d'ID
-        choices: ["Attack on Titan", "Naruto", "One Piece", "Death Note"]
-      },
-      {
-        id: 2,
-        anime: "Naruto",
-        opening: "Blue Bird",
-        videoUrl: "https://www.youtube.com/embed/kcgRNwYgqGk?si=vNOMFArp95OXMSOm", // Exemple d'ID
-        choices: ["Naruto", "Bleach", "Fairy Tail", "My Hero Academia"]
-      }
-      // Ajoute plus d'openings ici
-    ];
+// Charger les questions depuis questions.json
+async function loadQuestions() {
+    try {
+        const response = await fetch('assets/questions.json');
+        questions = await response.json();
+        loadQuestion();
+    } catch (error) {
+        console.error('Erreur lors du chargement des questions:', error);
+        document.getElementById('question-container').innerHTML = '<p>Erreur lors du chargement des questions.</p>';
+    }
+}
 
-    let score = 0;
-    let currentQuestionIndex = 0;
-
-    // Éléments du DOM
-    const videoPlayer = document.getElementById('video-player');
-    const choiceButtons = document.querySelectorAll('.choice-btn');
-    const nextButton = document.getElementById('next-btn');
-    const scoreDisplay = document.getElementById('score');
-
-    // Fonction pour charger une question
-    function loadQuestion(index) {
-      const currentOpening = openings[index];
-
-      // Charger la vidéo
-      videoPlayer.src = currentOpening.videoUrl;
-
-      // Charger les choix
-      currentOpening.choices.forEach((choice, i) => {
-        choiceButtons[i].textContent = choice;
-        choiceButtons[i].onclick = () => checkAnswer(choice, currentOpening.anime);
-      });
-
-      // Masquer le bouton "Suivant"
-      nextButton.style.display = 'none';
+// Charger une question
+function loadQuestion() {
+    if (currentQuestion >= questions.length) {
+        endQuiz();
+        return;
     }
 
-    // Vérifier la réponse
-    function checkAnswer(selected, correct) {
-      if (selected === correct) {
-        score++;
-        scoreDisplay.textContent = score;
-        alert('Bonne réponse !');
-      } else {
-        alert(`Mauvaise réponse ! La bonne réponse était : ${correct}`);
-      }
+    const q = questions[currentQuestion];
+    document.getElementById('question-img').src = q.image || 'assets/images/worlds-logo.png';
+    document.getElementById('question-text').textContent = q.question;
+    document.getElementById('feedback').textContent = '';
 
-      // Afficher le bouton "Suivant"
-      nextButton.style.display = 'block';
+    const optionsDiv = document.getElementById('options');
+    const answerInput = document.getElementById('answer');
+    optionsDiv.innerHTML = '';
 
-      // Arrêter la vidéo
-      videoPlayer.src = ''; // Réinitialiser pour arrêter
+    if (q.type === 'multiple') {
+        answerInput.style.display = 'none';
+        optionsDiv.style.display = 'flex';
+        q.options.forEach(opt => {
+            const btn = document.createElement('div');
+            btn.className = 'option';
+            btn.textContent = opt;
+            btn.onclick = () => checkAnswer(opt);
+            optionsDiv.appendChild(btn);
+        });
+    } else {
+        answerInput.style.display = 'block';
+        optionsDiv.style.display = 'none';
+        answerInput.value = '';
+    }
+}
+
+// Vérifier la réponse
+function checkAnswer(userAnswer) {
+    const q = questions[currentQuestion];
+    const feedback = document.getElementById('feedback');
+    userAnswer = userAnswer || document.getElementById('answer').value.trim();
+
+    if (userAnswer.toLowerCase() === q.answer.toLowerCase()) {
+        feedback.textContent = 'Correct !';
+        feedback.style.color = '#28a745';
+        score += 10;
+        document.getElementById('score').textContent = score;
+    } else {
+        feedback.textContent = `Faux ! La réponse était ${q.answer}.`;
+        feedback.style.color = '#dc3545';
     }
 
-    // Passer à la question suivante
-    nextButton.onclick = () => {
-      currentQuestionIndex++;
-      if (currentQuestionIndex < openings.length) {
-        loadQuestion(currentQuestionIndex);
-      } else {
-        alert(`Quiz terminé ! Votre score : ${score}/${openings.length}`);
-        score = 0;
-        currentQuestionIndex = 0;
-        scoreDisplay.textContent = score;
-        loadQuestion(currentQuestionIndex);
-      }
-    };
+    currentQuestion++;
+    setTimeout(loadQuestion, 1000); // Attendre 1 seconde avant la prochaine question
+}
 
-    // Charger la première question
-    loadQuestion(currentQuestionIndex);
-  </script>
-</body>
-</html>
+// Terminer le quiz
+function endQuiz() {
+    document.getElementById('question-container').innerHTML = `
+        <h2>Quiz terminé !</h2>
+        <p>Score final : ${score}</p>
+        <a href="quiz.html" class="btn">Rejouer</a>
+        <a href="index.html" class="btn">Retour à l'accueil</a>
+    `;
+    // Sauvegarder le score dans localStorage
+    const highScore = localStorage.getItem('highScore') || 0;
+    if (score > highScore) {
+        localStorage.setItem('highScore', score);
+    }
+}
+
+// Lancer le chargement des questions
+loadQuestions();
