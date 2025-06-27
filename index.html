@@ -1,237 +1,87 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LoL Esport Trivia</title>
-    <style>
-        /* Style CSS */
-        body {
-            background: linear-gradient(to bottom, #0a0e1a, #1c2526);
-            color: #ffffff;
-            font-family: 'Arial', sans-serif;
-            text-align: center;
-            margin: 0;
-            padding: 0;
-        }
-        .container {
-            max-width: 800px;
-            margin: 50px auto;
-        }
-        h1 {
-            font-size: 2.5em;
-            color: #c8aa6e;
-            text-shadow: 0 0 10px #c8aa6e;
-        }
-        .logo, .question-img {
-            width: 200px;
-            margin: 20px 0;
-        }
-        .btn, #submit-btn {
-            background-color: #c8aa6e;
-            color: #1a1a1a;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 1.2em;
-            transition: background-color 0.3s;
-        }
-        .btn:hover, #submit-btn:hover {
-            background-color: #e0c68f;
-        }
-        .options {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin: 20px 0;
-        }
-        .option {
-            background: #2c2c2c;
-            padding: 10px;
-            border: 1px solid #c8aa6e;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        .option:hover {
-            background: #3c3c3c;
-        }
-        #answer {
-            padding: 10px;
-            margin: 10px;
-            border-radius: 5px;
-            background: #2c2c2c;
-            color: #ffffff;
-            border: 1px solid #c8aa6e;
-            width: 200px;
-        }
-        #feedback {
-            font-size: 1.2em;
-            margin: 20px 0;
-        }
-        #score {
-            font-weight: bold;
-            color: #c8aa6e;
-        }
-        #quiz-container {
-            display: none;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>🎵 Devine l'Anime par l'Opening</title>
+  <style>
+    body {
+      background-color: #111;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 40px;
+    }
+
+    iframe {
+      width: 560px;
+      height: 315px;
+      border: none;
+      margin-top: 20px;
+    }
+
+    input[type="text"] {
+      margin-top: 30px;
+      padding: 10px;
+      font-size: 16px;
+      width: 300px;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin-left: 10px;
+      cursor: pointer;
+    }
+
+    #result {
+      margin-top: 20px;
+      font-size: 20px;
+      font-weight: bold;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Page d'accueil -->
-        <div id="home-container">
-            <img src="assets/images/worlds-logo.png" alt="Worlds Logo" class="logo">
-            <h1>LoL Esport Trivia</h1>
-            <p>Teste tes connaissances sur l’esport de League of Legends ! Des Worlds aux joueurs légendaires, sauras-tu tout ?</p>
-            <button class="btn" onclick="startQuiz()">Démarrer le quiz</button>
-        </div>
 
-        <!-- Quiz -->
-        <div id="quiz-container">
-            <h1>LoL Esport Trivia</h1>
-            <div id="question-container">
-                <img id="question-img" src="" alt="Contexte" class="question-img">
-                <p id="question-text"></p>
-                <div id="options" class="options"></div>
-                <input type="text" id="answer" placeholder="Ta réponse" style="display: none;">
-                <button id="submit-btn" onclick="checkAnswer()">Valider</button>
-            </div>
-            <p id="feedback"></p>
-            <p>Score : <span id="score">0</span></p>
-        </div>
-    </div>
+  <h1>🎵 Devine l'anime avec son Opening</h1>
 
-    <script>
-        // Variables globales
-        let currentQuestion = 0;
-        let score = 0;
-        const questions = [
-            {
-                type: "multiple",
-                question: "Quelle équipe a remporté les Worlds 2023 ?",
-                options: ["T1", "G2", "JDG", "DRX"],
-                answer: "T1",
-                image: "assets/images/t1-worlds.jpg"
-            },
-            {
-                type: "text",
-                question: "Quel joueur est surnommé 'The Demon King' ?",
-                answer: "Faker",
-                image: "assets/images/faker.jpg"
-            },
-            {
-                type: "multiple",
-                question: "Quel champion a été le plus joué aux Worlds 2022 ?",
-                options: ["Sylas", "Yuumi", "Aatrox", "Maokai"],
-                answer: "Aatrox",
-                image: "assets/images/worlds-2022.jpg"
-            },
-            {
-                type: "text",
-                question: "Quelle équipe a réalisé un backdoor légendaire contre SKT en 2013 ?",
-                answer: "Fnatic",
-                image: "assets/images/fnatic.jpg"
-            },
-            {
-                type: "multiple",
-                question: "Quel joueur a le plus de titres de champion du monde ?",
-                options: ["Bengi", "Faker", "Uzi", "Ruler"],
-                answer: "Faker",
-                image: "assets/images/worlds-trophy.jpg"
-            }
-        ];
+  <!-- Opening video -->
+  <iframe
+    id="video"
+    src="https://www.youtube.com/embed/4QDEWNg5hAM?autoplay=1&mute=1"
+    allow="autoplay"
+  ></iframe>
 
-        // Afficher le quiz
-        function startQuiz() {
-            document.getElementById('home-container').style.display = 'none';
-            document.getElementById('quiz-container').style.display = 'block';
-            loadQuestion();
+  <div>
+    <input type="text" id="guessInput" placeholder="Nom de l'anime">
+    <button onclick="checkGuess()">Valider</button>
+  </div>
+
+  <div id="result"></div>
+
+  <script>
+    const bonneReponse = "Noragami"; // Nom exact à deviner
+    let tentatives = 0;
+    const maxTentatives = 3;
+
+    function checkGuess() {
+      const input = document.getElementById("guessInput");
+      const result = document.getElementById("result");
+      const guess = input.value.trim().toLowerCase();
+      tentatives++;
+
+      if (guess === bonneReponse.toLowerCase()) {
+        result.textContent = "✅ Bravo ! C'était bien " + bonneReponse + " 🎉";
+        result.style.color = "limegreen";
+      } else {
+        if (tentatives >= maxTentatives) {
+          result.textContent = `❌ Raté... La bonne réponse était : ${bonneReponse}`;
+          result.style.color = "red";
+        } else {
+          result.textContent = `❌ Mauvaise réponse (${tentatives}/${maxTentatives})`;
+          result.style.color = "orange";
         }
-
-        // Charger une question
-        function loadQuestion() {
-            if (currentQuestion >= questions.length) {
-                endQuiz();
-                return;
-            }
-
-            const q = questions[currentQuestion];
-            document.getElementById('question-img').src = q.image || 'assets/images/worlds-logo.png';
-            document.getElementById('question-text').textContent = q.question;
-            document.getElementById('feedback').textContent = '';
-
-            const optionsDiv = document.getElementById('options');
-            const answerInput = document.getElementById('answer');
-            optionsDiv.innerHTML = '';
-
-            if (q.type === 'multiple') {
-                answerInput.style.display = 'none';
-                optionsDiv.style.display = 'flex';
-                q.options.forEach(opt => {
-                    const btn = document.createElement('div');
-                    btn.className = 'option';
-                    btn.textContent = opt;
-                    btn.onclick = () => checkAnswer(opt);
-                    optionsDiv.appendChild(btn);
-                });
-            } else {
-                answerInput.style.display = 'block';
-                optionsDiv.style.display = 'none';
-                answerInput.value = '';
-            }
-        }
-
-        // Vérifier la réponse
-        function checkAnswer(userAnswer) {
-            const q = questions[currentQuestion];
-            const feedback = document.getElementById('feedback');
-            userAnswer = userAnswer || document.getElementById('answer').value.trim();
-
-            if (userAnswer.toLowerCase() === q.answer.toLowerCase()) {
-                feedback.textContent = 'Correct !';
-                feedback.style.color = '#28a745';
-                score += 10;
-                document.getElementById('score').textContent = score;
-            } else {
-                feedback.textContent = `Faux ! La réponse était ${q.answer}.`;
-                feedback.style.color = '#dc3545';
-            }
-
-            currentQuestion++;
-            setTimeout(loadQuestion, 1000); // Attendre 1 seconde avant la prochaine question
-        }
-
-        // Terminer le quiz
-        function endQuiz() {
-            document.getElementById('question-container').innerHTML = `
-                <h2>Quiz terminé !</h2>
-                <p>Score final : ${score}</p>
-                <button class="btn" onclick="restartQuiz()">Rejouer</button>
-            `;
-            // Sauvegarder le score dans localStorage
-            const highScore = localStorage.getItem('highScore') || 0;
-            if (score > highScore) {
-                localStorage.setItem('highScore', score);
-            }
-        }
-
-        // Rejouer
-        function restartQuiz() {
-            currentQuestion = 0;
-            score = 0;
-            document.getElementById('score').textContent = score;
-            document.getElementById('question-container').innerHTML = `
-                <img id="question-img" src="" alt="Contexte" class="question-img">
-                <p id="question-text"></p>
-                <div id="options" class="options"></div>
-                <input type="text" id="answer" placeholder="Ta réponse" style="display: none;">
-                <button id="submit-btn" onclick="checkAnswer()">Valider</button>
-            `;
-            loadQuestion();
-        }
-    </script>
+      }
+    }
+  </script>
 </body>
 </html>
