@@ -11,6 +11,7 @@
       text-align: center;
       padding: 2rem;
     }
+
     button, input {
       background-color: #1e1e1e;
       color: #fff;
@@ -18,28 +19,38 @@
       border-radius: 6px;
       padding: 0.6rem 1rem;
       font-size: 1rem;
-      margin: 1rem;
+      margin: 0.5rem;
     }
+
     button:hover {
       background-color: #333;
       cursor: pointer;
     }
+
     input {
       width: 60%;
     }
-    #player {
+
+    #playerWrapper {
+      margin-top: 1rem;
       display: none;
     }
-    #playButton:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
+
+    #player {
+      width: 480px;
+      height: 270px;
+      margin: auto;
     }
   </style>
 </head>
 <body>
   <h1>🎧 Devine l’anime à partir de l’opening</h1>
 
-  <button id="playButton" disabled>▶️ Jouer l’extrait</button>
+  <div>
+    <button id="playAudio" disabled>▶️ Jouer l’audio</button>
+    <button id="stopAudio" disabled>⏹️ Stopper l’audio</button>
+    <button id="toggleVideo">📺 Afficher la vidéo</button>
+  </div>
 
   <div>
     <input type="text" id="guessInput" placeholder="Nom de l'anime..." />
@@ -48,18 +59,25 @@
 
   <p id="result"></p>
 
-  <div id="player"></div>
+  <div id="playerWrapper">
+    <div id="player"></div>
+  </div>
 
   <script src="https://www.youtube.com/iframe_api"></script>
   <script>
     let player;
     let stopInterval;
+    let videoVisible = false;
+
+    const VIDEO_ID = "4QDEWNg5hAM";
+    const START_TIME = 0;
+    const END_TIME = 15;
 
     function onYouTubeIframeAPIReady() {
-      player = new YT.Player('player', {
-        height: '0',
-        width: '0',
-        videoId: '4QDEWNg5hAM',
+      player = new YT.Player("player", {
+        height: "270",
+        width: "480",
+        videoId: VIDEO_ID,
         playerVars: {
           autoplay: 0,
           controls: 0,
@@ -67,24 +85,40 @@
         },
         events: {
           onReady: () => {
-            document.getElementById('playButton').disabled = false;
+            document.getElementById("playAudio").disabled = false;
+            document.getElementById("stopAudio").disabled = false;
           },
           onStateChange: onPlayerStateChange
         }
       });
     }
 
-    document.getElementById('playButton').addEventListener('click', () => {
-      if (!player) return;
-      player.seekTo(0);
-      player.playVideo();
+    document.getElementById("playAudio").addEventListener("click", () => {
+      if (player) {
+        player.seekTo(START_TIME);
+        player.playVideo();
+      }
+    });
+
+    document.getElementById("stopAudio").addEventListener("click", () => {
+      if (player) {
+        player.pauseVideo();
+        clearInterval(stopInterval);
+      }
+    });
+
+    document.getElementById("toggleVideo").addEventListener("click", () => {
+      const wrapper = document.getElementById("playerWrapper");
+      videoVisible = !videoVisible;
+      wrapper.style.display = videoVisible ? "block" : "none";
+      document.getElementById("toggleVideo").textContent = videoVisible ? "📺 Cacher la vidéo" : "📺 Afficher la vidéo";
     });
 
     function onPlayerStateChange(event) {
       if (event.data === YT.PlayerState.PLAYING) {
         clearInterval(stopInterval);
         stopInterval = setInterval(() => {
-          if (player.getCurrentTime() >= 15) {
+          if (player.getCurrentTime() >= END_TIME) {
             player.pauseVideo();
             clearInterval(stopInterval);
           }
@@ -93,12 +127,13 @@
     }
 
     function checkAnswer() {
-      const input = document.getElementById('guessInput').value.trim().toLowerCase();
-      const correctAnswers = ['black clover', 'ブラッククローバー'];
-      const isCorrect = correctAnswers.some(ans => ans === input);
-      document.getElementById('result').textContent = isCorrect ? '✅ Bonne réponse !' : '❌ Mauvaise réponse.';
+      const input = document.getElementById("guessInput").value.trim().toLowerCase();
+      const correctAnswers = ["black clover", "ブラッククローバー"];
+      const isCorrect = correctAnswers.some(ans => ans.toLowerCase() === input);
+      document.getElementById("result").textContent = isCorrect
+        ? "✅ Bonne réponse !"
+        : "❌ Mauvaise réponse.";
     }
   </script>
 </body>
 </html>
-
