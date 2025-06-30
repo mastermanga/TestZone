@@ -45,7 +45,7 @@
 <body>
   <h1>🎧 Devine l’anime à partir de l’opening</h1>
 
-  <button id="playButton" disabled>▶️ Jouer l’extrait</button>
+  <button id="playButton">▶️ Jouer l’extrait</button>
 
   <div>
     <input type="text" id="guessInput" placeholder="Nom de l'anime..." />
@@ -60,7 +60,8 @@
   <script src="https://www.youtube.com/iframe_api"></script>
   <script>
     let player;
-    let playerReady = false;
+    let isReady = false;
+
     const VIDEO_ID = "4QDEWNg5hAM";
     const START_TIME = 0;
     const END_TIME = 15;
@@ -75,29 +76,30 @@
           autoplay: 0,
           controls: 0,
           modestbranding: 1,
+          start: START_TIME
         },
         events: {
-          onReady: onPlayerReady,
+          onReady: () => { isReady = true; },
           onStateChange: onPlayerStateChange
         }
       });
     }
 
-    function onPlayerReady() {
-      playerReady = true;
-      document.getElementById("playButton").disabled = false;
-      document.getElementById("playButton").addEventListener("click", () => {
+    document.getElementById("playButton").addEventListener("click", () => {
+      if (isReady && player && typeof player.seekTo === "function") {
         player.seekTo(START_TIME);
         player.playVideo();
-      });
-    }
+      } else {
+        console.warn("Player pas encore prêt.");
+      }
+    });
 
     function onPlayerStateChange(event) {
       if (event.data === YT.PlayerState.PLAYING) {
-        const stopAt = setInterval(() => {
+        const interval = setInterval(() => {
           if (player.getCurrentTime() >= END_TIME) {
             player.pauseVideo();
-            clearInterval(stopAt);
+            clearInterval(interval);
           }
         }, 500);
       }
@@ -113,5 +115,4 @@
   </script>
 </body>
 </html>
-
 
