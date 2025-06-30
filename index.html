@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Guess The Anime - 3 essais</title>
+  <title>Guess The Anime - Essais progressifs</title>
   <style>
     body {
       background-color: #121212;
@@ -33,9 +33,19 @@
       cursor: pointer;
     }
 
-    button:hover {
+    button:disabled {
+      background-color: #222;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    button:hover:not(:disabled) {
       background-color: #555;
     }
+
+    .correct { color: #4caf50; }
+    .incorrect { color: #f44336; }
+    .hidden { display: none; }
 
     #autocomplete-list {
       position: absolute;
@@ -58,26 +68,22 @@
       background-color: #333;
     }
 
-    .correct { color: #4caf50; }
-    .incorrect { color: #f44336; }
-    .hidden { display: none; }
-
     #playerWrapper {
       display: none;
     }
   </style>
 </head>
 <body>
-  <h1>🎧 Devine l'Opening (3 essais)</h1>
+  <h1>🎧 Devine l'Opening (essais progressifs)</h1>
 
   <div id="playerWrapper">
     <div id="player"></div>
   </div>
 
   <div>
-    <button id="playTry1">▶️ Écoute 1 (10s)</button>
-    <button id="playTry2">▶️ Écoute 2 (20s)</button>
-    <button id="playTry3">▶️ Écoute 3 (30s)</button>
+    <button id="playTry1">▶️ Écoute 1 (3s)</button>
+    <button id="playTry2" disabled>▶️ Écoute 2 (5s)</button>
+    <button id="playTry3" disabled>▶️ Écoute 3 (10s)</button>
     <button id="stopAudio">⏹️ Stop</button>
   </div>
 
@@ -98,14 +104,15 @@
         opening: "Black Rover",
         videoId: "4QDEWNg5hAM",
         startTime: 0
-      },
-      // Tu peux ajouter d’autres animes ici
+      }
+      // Tu peux ajouter d'autres animes ici
     ];
 
     let player;
     let stopTimeout;
-    let currentTry = 1;
     let currentAnime = getDailyAnime();
+    let triesPlayed = {1: false, 2: false, 3: false};
+    let currentTry = 1;
 
     function getDailyAnime() {
       const today = new Date().toISOString().split('T')[0];
@@ -126,7 +133,7 @@
         },
         events: {
           onReady: () => {
-            document.querySelectorAll("button").forEach(btn => btn.disabled = false);
+            document.getElementById("playTry1").disabled = false;
           },
           onError: () => {
             document.getElementById("result").textContent = "Erreur : Impossible de charger l’audio.";
@@ -136,29 +143,31 @@
       });
     }
 
-    function playTry(duration) {
+    function playTry(tryNumber, duration) {
+      if (triesPlayed[tryNumber]) return;
+
+      currentTry = tryNumber;
+      triesPlayed[tryNumber] = true;
+
       if (player) {
         clearTimeout(stopTimeout);
         player.seekTo(currentAnime.startTime);
         player.playVideo();
-        stopTimeout = setTimeout(() => player.pauseVideo(), duration * 1000);
+        stopTimeout = setTimeout(() => {
+          player.pauseVideo();
+        }, duration * 1000);
       }
+
+      // Débloquer le suivant après lecture
+      if (tryNumber === 1) document.getElementById("playTry2").disabled = false;
+      if (tryNumber === 2) document.getElementById("playTry3").disabled = false;
+
+      document.getElementById(`playTry${tryNumber}`).disabled = true;
     }
 
-    document.getElementById("playTry1").addEventListener("click", () => {
-      currentTry = 1;
-      playTry(10);
-    });
-
-    document.getElementById("playTry2").addEventListener("click", () => {
-      currentTry = 2;
-      playTry(20);
-    });
-
-    document.getElementById("playTry3").addEventListener("click", () => {
-      currentTry = 3;
-      playTry(30);
-    });
+    document.getElementById("playTry1").addEventListener("click", () => playTry(1, 3));
+    document.getElementById("playTry2").addEventListener("click", () => playTry(2, 5));
+    document.getElementById("playTry3").addEventListener("click", () => playTry(3, 10));
 
     document.getElementById("stopAudio").addEventListener("click", () => {
       if (player) {
@@ -174,16 +183,17 @@
       const isCorrect = currentAnime.altTitles.some(ans => ans.toLowerCase() === input);
 
       if (isCorrect) {
-        result.textContent = `✅ Bravo ! C’est ${currentAnime.title} - ${currentAnime.opening}`;
+        result.textContent = `✅ Bravo ! C’était ${currentAnime.title} - ${currentAnime.opening}`;
         result.className = "correct";
         shareButton.classList.remove("hidden");
       } else {
-        result.textContent = `❌ Faux. Essaie une autre écoute (tentative ${currentTry}/3)`;
-        result.className = "incorrect";
-        if (currentTry >= 3) {
+        if (currentTry === 3 || (triesPlayed[1] && triesPlayed[2] && triesPlayed[3])) {
           result.textContent = `❌ Mauvaise réponse. C’était ${currentAnime.title} - ${currentAnime.opening}`;
           shareButton.classList.remove("hidden");
+        } else {
+          result.textContent = `❌ Faux. Essaie une autre écoute.`;
         }
+        result.className = "incorrect";
       }
     }
 
@@ -228,7 +238,6 @@
       if (e.key === "Enter") checkAnswer();
     });
 
-    // Charger API YouTube
     const tag = document.createElement("script");
     tag.src = "https://www.youtube.com/iframe_api";
     document.body.appendChild(tag);
