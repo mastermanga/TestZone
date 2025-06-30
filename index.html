@@ -33,7 +33,7 @@
 
     #playerWrapper {
       margin-top: 1rem;
-      display: none;
+      display: block; /* Affiché par défaut */
     }
 
     #player {
@@ -49,7 +49,7 @@
   <div>
     <button id="playAudio" disabled>▶️ Jouer l’audio</button>
     <button id="stopAudio" disabled>⏹️ Stopper l’audio</button>
-    <button id="toggleVideo">📺 Afficher la vidéo</button>
+    <button id="toggleVideo">📺 Cacher la vidéo</button>
   </div>
 
   <div>
@@ -67,7 +67,7 @@
   <script>
     let player;
     let stopInterval;
-    let videoVisible = false;
+    let videoVisible = true; // visible par défaut
 
     const VIDEO_ID = "4QDEWNg5hAM";
     const START_TIME = 0;
@@ -137,3 +137,4 @@
   </script>
 </body>
 </html>
+
