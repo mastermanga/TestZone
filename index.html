@@ -1,26 +1,25 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Guess the Anime</title>
   <style>
     body {
       font-family: Arial, sans-serif;
       background-color: #121212;
-      color: #ffffff;
+      color: #fff;
       text-align: center;
       padding: 2rem;
     }
 
     button, input {
       background-color: #1e1e1e;
-      color: #ffffff;
+      color: #fff;
       border: 1px solid #444;
       border-radius: 6px;
       padding: 0.6rem 1rem;
       font-size: 1rem;
       margin: 1rem;
-      transition: background-color 0.3s;
     }
 
     button:hover {
@@ -28,12 +27,12 @@
       cursor: pointer;
     }
 
-    #player {
-      display: none;
-    }
-
     input {
       width: 60%;
+    }
+
+    #player {
+      display: none;
     }
 
     #playButton:disabled {
@@ -45,7 +44,7 @@
 <body>
   <h1>🎧 Devine l’anime à partir de l’opening</h1>
 
-  <button id="playButton">▶️ Jouer l’extrait</button>
+  <button id="playButton" disabled>▶️ Jouer l’extrait</button>
 
   <div>
     <input type="text" id="guessInput" placeholder="Nom de l'anime..." />
@@ -56,16 +55,15 @@
 
   <div id="player"></div>
 
-  <!-- YouTube IFrame API -->
   <script src="https://www.youtube.com/iframe_api"></script>
   <script>
     let player;
-    let isReady = false;
-
+    let playerReady = false;
     const VIDEO_ID = "4QDEWNg5hAM";
     const START_TIME = 0;
     const END_TIME = 15;
     const CORRECT_ANSWERS = ["Black Clover", "ブラッククローバー"];
+    let stopInterval;
 
     function onYouTubeIframeAPIReady() {
       player = new YT.Player("player", {
@@ -75,33 +73,36 @@
         playerVars: {
           autoplay: 0,
           controls: 0,
-          modestbranding: 1,
-          start: START_TIME
+          modestbranding: 1
         },
         events: {
-          onReady: () => { isReady = true; },
+          onReady: () => {
+            playerReady = true;
+            document.getElementById("playButton").disabled = false;
+          },
           onStateChange: onPlayerStateChange
         }
       });
     }
 
     document.getElementById("playButton").addEventListener("click", () => {
-      if (isReady && player && typeof player.seekTo === "function") {
-        player.seekTo(START_TIME);
-        player.playVideo();
-      } else {
-        console.warn("Player pas encore prêt.");
-      }
+      if (!playerReady || !player) return;
+
+      // Recharge proprement et rejoue depuis le début
+      player.stopVideo();
+      player.seekTo(START_TIME);
+      player.playVideo();
     });
 
     function onPlayerStateChange(event) {
       if (event.data === YT.PlayerState.PLAYING) {
-        const interval = setInterval(() => {
+        clearInterval(stopInterval);
+        stopInterval = setInterval(() => {
           if (player.getCurrentTime() >= END_TIME) {
             player.pauseVideo();
-            clearInterval(interval);
+            clearInterval(stopInterval);
           }
-        }, 500);
+        }, 300);
       }
     }
 
