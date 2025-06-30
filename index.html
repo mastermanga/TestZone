@@ -2,38 +2,86 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Guess The Anime Opening</title>
+  <title>🎶 Guess The Anime Opening</title>
   <style>
-    .hidden-video {
-      width: 1px;
-      height: 1px;
-      opacity: 0;
-      pointer-events: none;
-      position: absolute;
-      left: -9999px;
+    body {
+      background-color: #121212;
+      color: #ffffff;
+      font-family: sans-serif;
+      padding: 20px;
+      text-align: center;
     }
-    .correct { color: green; }
-    .incorrect { color: red; }
-    .autocomplete-items div {
-      background-color: #f1f1f1;
-      padding: 5px;
+
+    input, button {
+      padding: 10px;
+      margin: 10px;
+      border-radius: 5px;
+      border: none;
+      font-size: 1rem;
+    }
+
+    input {
+      width: 300px;
+      background-color: #1e1e1e;
+      color: white;
+      border: 1px solid #444;
+    }
+
+    button {
+      background-color: #333;
+      color: white;
       cursor: pointer;
     }
+
+    button:hover {
+      background-color: #555;
+    }
+
+    #autocomplete-list {
+      position: absolute;
+      background-color: #1e1e1e;
+      border: 1px solid #444;
+      z-index: 99;
+      width: 300px;
+      left: 50%;
+      transform: translateX(-50%);
+      max-height: 150px;
+      overflow-y: auto;
+    }
+
+    .autocomplete-items div {
+      padding: 10px;
+      cursor: pointer;
+      border-bottom: 1px solid #333;
+    }
+
     .autocomplete-items div:hover {
-      background-color: #e0e0e0;
+      background-color: #333;
+    }
+
+    .correct { color: #4caf50; }
+    .incorrect { color: #f44336; }
+
+    .hidden {
+      display: none;
+    }
+
+    #playerWrapper {
+      display: none; /* Vidéo masquée par défaut */
     }
   </style>
 </head>
 <body>
-  <h1>🎶 Devine l'opening d'anime !</h1>
+  <h1>🎧 Devine l'opening d'anime</h1>
 
   <div id="playerWrapper">
     <div id="player"></div>
   </div>
 
-  <button id="playAudio">▶️ Écouter</button>
-  <button id="stopAudio">⏹️ Stop</button>
-  <button id="toggleVideo">📺 Cacher la vidéo</button>
+  <div>
+    <button id="playAudio">▶️ Écouter</button>
+    <button id="stopAudio">⏹️ Stop</button>
+  </div>
 
   <div>
     <input type="text" id="guessInput" placeholder="Entre le nom de l'anime" autocomplete="off">
@@ -54,7 +102,7 @@
         startTime: 0,
         endTime: 15
       },
-      // Ajoutez d'autres animes ici
+      // Ajoute d'autres animes ici
     ];
 
     function getDailyAnime() {
@@ -65,13 +113,12 @@
 
     let player;
     let stopTimeout;
-    let videoVisible = false;
-    let currentAnime = getDailyAnime();
+    const currentAnime = getDailyAnime();
 
     function onYouTubeIframeAPIReady() {
       player = new YT.Player("player", {
-        height: "270",
-        width: "480",
+        height: "1",
+        width: "1",
         videoId: currentAnime.videoId,
         playerVars: {
           autoplay: 1,
@@ -83,13 +130,13 @@
         },
         events: {
           onReady: () => {
-            player.unMute(); // Facultatif
+            player.unMute();
             document.getElementById("playAudio").disabled = false;
             document.getElementById("stopAudio").disabled = false;
           },
           onStateChange: onPlayerStateChange,
-          onError: (event) => {
-            document.getElementById("result").textContent = "Erreur : Impossible de charger la vidéo.";
+          onError: () => {
+            document.getElementById("result").textContent = "Erreur : Impossible de charger l’audio.";
             document.getElementById("result").classList.add("incorrect");
           }
         }
@@ -100,9 +147,7 @@
       if (event.data === YT.PlayerState.PLAYING) {
         clearTimeout(stopTimeout);
         const duration = (currentAnime.endTime - currentAnime.startTime) * 1000;
-        stopTimeout = setTimeout(() => {
-          player.pauseVideo();
-        }, duration);
+        stopTimeout = setTimeout(() => player.pauseVideo(), duration);
       }
     }
 
@@ -118,13 +163,6 @@
         player.pauseVideo();
         clearTimeout(stopTimeout);
       }
-    });
-
-    document.getElementById("toggleVideo").addEventListener("click", () => {
-      const wrapper = document.getElementById("playerWrapper");
-      videoVisible = !videoVisible;
-      wrapper.classList.toggle("hidden-video", !videoVisible);
-      document.getElementById("toggleVideo").textContent = videoVisible ? "📺 Cacher la vidéo" : "📺 Afficher la vidéo";
     });
 
     function checkAnswer() {
@@ -193,3 +231,4 @@
   </script>
 </body>
 </html>
+
