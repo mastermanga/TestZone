@@ -1,87 +1,87 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <title>🎵 Devine l'Anime par l'Opening</title>
+  <meta charset="UTF-8" />
+  <title>Guess the Anime</title>
   <style>
     body {
-      background-color: #111;
-      color: #fff;
-      font-family: Arial, sans-serif;
+      font-family: sans-serif;
       text-align: center;
-      padding: 40px;
+      padding: 2rem;
     }
-
     iframe {
-      width: 560px;
-      height: 315px;
+      width: 0;
+      height: 0;
       border: none;
-      margin-top: 20px;
     }
-
-    input[type="text"] {
-      margin-top: 30px;
-      padding: 10px;
-      font-size: 16px;
-      width: 300px;
-    }
-
-    button {
-      padding: 10px 20px;
-      font-size: 16px;
-      margin-left: 10px;
-      cursor: pointer;
-    }
-
-    #result {
-      margin-top: 20px;
-      font-size: 20px;
-      font-weight: bold;
+    input, button {
+      padding: 0.5rem;
+      font-size: 1rem;
+      margin-top: 1rem;
     }
   </style>
 </head>
 <body>
+  <h1>🎧 Devine l’anime à partir de l’opening</h1>
 
-  <h1>🎵 Devine l'anime avec son Opening</h1>
+  <div id="player"></div>
 
-  <!-- Opening video -->
-  <iframe
-    id="video"
-    src="https://www.youtube.com/embed/4QDEWNg5hAM?autoplay=1&mute=1"
-    allow="autoplay"
-  ></iframe>
+  <input type="text" id="guessInput" placeholder="Nom de l'anime" />
+  <button onclick="checkAnswer()">Valider</button>
 
-  <div>
-    <input type="text" id="guessInput" placeholder="Nom de l'anime">
-    <button onclick="checkGuess()">Valider</button>
-  </div>
+  <p id="result"></p>
 
-  <div id="result"></div>
-
+  <!-- YouTube IFrame API -->
+  <script src="https://www.youtube.com/iframe_api"></script>
   <script>
-    const bonneReponse = "Noragami"; // Nom exact à deviner
-    let tentatives = 0;
-    const maxTentatives = 3;
+    let player;
+    const VIDEO_ID = "4QDEWNg5hAM"; // ta vidéo
+    const START_TIME = 0;
+    const END_TIME = 15;
+    const CORRECT_ANSWERS = ["Black Clover", "ブラッククローバー"];
 
-    function checkGuess() {
-      const input = document.getElementById("guessInput");
-      const result = document.getElementById("result");
-      const guess = input.value.trim().toLowerCase();
-      tentatives++;
-
-      if (guess === bonneReponse.toLowerCase()) {
-        result.textContent = "✅ Bravo ! C'était bien " + bonneReponse + " 🎉";
-        result.style.color = "limegreen";
-      } else {
-        if (tentatives >= maxTentatives) {
-          result.textContent = `❌ Raté... La bonne réponse était : ${bonneReponse}`;
-          result.style.color = "red";
-        } else {
-          result.textContent = `❌ Mauvaise réponse (${tentatives}/${maxTentatives})`;
-          result.style.color = "orange";
+    function onYouTubeIframeAPIReady() {
+      player = new YT.Player("player", {
+        height: "0",
+        width: "0",
+        videoId: VIDEO_ID,
+        playerVars: {
+          autoplay: 1,
+          start: START_TIME,
+          end: END_TIME,
+          controls: 0,
+          modestbranding: 1
+        },
+        events: {
+          onReady: onPlayerReady,
+          onStateChange: onPlayerStateChange
         }
+      });
+    }
+
+    function onPlayerReady(event) {
+      event.target.playVideo();
+    }
+
+    function onPlayerStateChange(event) {
+      if (event.data === YT.PlayerState.PLAYING) {
+        const interval = setInterval(() => {
+          if (player.getCurrentTime() >= END_TIME) {
+            player.pauseVideo();
+            clearInterval(interval);
+          }
+        }, 500);
       }
+    }
+
+    function checkAnswer() {
+      const userGuess = document.getElementById("guessInput").value.trim().toLowerCase();
+      const isCorrect = CORRECT_ANSWERS.some(ans => userGuess === ans.toLowerCase());
+      document.getElementById("result").textContent = isCorrect
+        ? "✅ Bonne réponse !"
+        : "❌ Mauvaise réponse. Réessaie !";
     }
   </script>
 </body>
 </html>
+
