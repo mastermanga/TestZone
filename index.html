@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <title>Guess the Anime - Mode Dark</title>
+  <title>Guess the Anime</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -35,12 +35,17 @@
     input {
       width: 60%;
     }
+
+    #playButton:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
   </style>
 </head>
 <body>
   <h1>🎧 Devine l’anime à partir de l’opening</h1>
 
-  <button onclick="playClip()">▶️ Jouer l’extrait</button>
+  <button id="playButton" disabled>▶️ Jouer l’extrait</button>
 
   <div>
     <input type="text" id="guessInput" placeholder="Nom de l'anime..." />
@@ -55,8 +60,7 @@
   <script src="https://www.youtube.com/iframe_api"></script>
   <script>
     let player;
-    let hasPlayed = false;
-
+    let playerReady = false;
     const VIDEO_ID = "4QDEWNg5hAM";
     const START_TIME = 0;
     const END_TIME = 15;
@@ -69,26 +73,23 @@
         videoId: VIDEO_ID,
         playerVars: {
           autoplay: 0,
-          start: START_TIME,
-          end: END_TIME,
           controls: 0,
-          modestbranding: 1
+          modestbranding: 1,
         },
         events: {
+          onReady: onPlayerReady,
           onStateChange: onPlayerStateChange
         }
       });
     }
 
-    function playClip() {
-      if (!hasPlayed && player) {
+    function onPlayerReady() {
+      playerReady = true;
+      document.getElementById("playButton").disabled = false;
+      document.getElementById("playButton").addEventListener("click", () => {
         player.seekTo(START_TIME);
         player.playVideo();
-        hasPlayed = true;
-      } else {
-        player.seekTo(START_TIME);
-        player.playVideo();
-      }
+      });
     }
 
     function onPlayerStateChange(event) {
@@ -112,4 +113,5 @@
   </script>
 </body>
 </html>
+
 
