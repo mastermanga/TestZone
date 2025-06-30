@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Guess the Anime</title>
   <style>
     body {
@@ -11,7 +11,6 @@
       text-align: center;
       padding: 2rem;
     }
-
     button, input {
       background-color: #1e1e1e;
       color: #fff;
@@ -21,20 +20,16 @@
       font-size: 1rem;
       margin: 1rem;
     }
-
     button:hover {
       background-color: #333;
       cursor: pointer;
     }
-
     input {
       width: 60%;
     }
-
     #player {
       display: none;
     }
-
     #playButton:disabled {
       opacity: 0.5;
       cursor: not-allowed;
@@ -58,18 +53,13 @@
   <script src="https://www.youtube.com/iframe_api"></script>
   <script>
     let player;
-    let playerReady = false;
-    const VIDEO_ID = "4QDEWNg5hAM";
-    const START_TIME = 0;
-    const END_TIME = 15;
-    const CORRECT_ANSWERS = ["Black Clover", "ブラッククローバー"];
     let stopInterval;
 
     function onYouTubeIframeAPIReady() {
-      player = new YT.Player("player", {
-        height: "0",
-        width: "0",
-        videoId: VIDEO_ID,
+      player = new YT.Player('player', {
+        height: '0',
+        width: '0',
+        videoId: '4QDEWNg5hAM',
         playerVars: {
           autoplay: 0,
           controls: 0,
@@ -77,20 +67,16 @@
         },
         events: {
           onReady: () => {
-            playerReady = true;
-            document.getElementById("playButton").disabled = false;
+            document.getElementById('playButton').disabled = false;
           },
           onStateChange: onPlayerStateChange
         }
       });
     }
 
-    document.getElementById("playButton").addEventListener("click", () => {
-      if (!playerReady || !player) return;
-
-      // Recharge proprement et rejoue depuis le début
-      player.stopVideo();
-      player.seekTo(START_TIME);
+    document.getElementById('playButton').addEventListener('click', () => {
+      if (!player) return;
+      player.seekTo(0);
       player.playVideo();
     });
 
@@ -98,7 +84,7 @@
       if (event.data === YT.PlayerState.PLAYING) {
         clearInterval(stopInterval);
         stopInterval = setInterval(() => {
-          if (player.getCurrentTime() >= END_TIME) {
+          if (player.getCurrentTime() >= 15) {
             player.pauseVideo();
             clearInterval(stopInterval);
           }
@@ -107,11 +93,10 @@
     }
 
     function checkAnswer() {
-      const input = document.getElementById("guessInput").value.trim().toLowerCase();
-      const correct = CORRECT_ANSWERS.some(ans => input === ans.toLowerCase());
-      document.getElementById("result").textContent = correct
-        ? "✅ Bonne réponse !"
-        : "❌ Mauvaise réponse.";
+      const input = document.getElementById('guessInput').value.trim().toLowerCase();
+      const correctAnswers = ['black clover', 'ブラッククローバー'];
+      const isCorrect = correctAnswers.some(ans => ans === input);
+      document.getElementById('result').textContent = isCorrect ? '✅ Bonne réponse !' : '❌ Mauvaise réponse.';
     }
   </script>
 </body>
