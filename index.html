@@ -5,11 +5,24 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Guess The Anime Opening</title>
 <style>
+  html, body {
+    height: 100%;
+    margin: 0;
+  }
   body {
     background: #121212;
     color: #eee;
     font-family: Arial, sans-serif;
-    margin: 2rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    min-height: 100vh;
+    padding: 1rem;
+  }
+  #container {
+    max-width: 480px;
+    width: 100%;
   }
   button {
     margin: 0.3rem;
@@ -44,6 +57,13 @@
   #result.incorrect {
     color: #f44336;
   }
+  #timer {
+    margin-top: 1rem;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #ff9800;
+    display: none;
+  }
   /* Styles autocomplétion */
   .autocomplete-items {
     position: absolute;
@@ -73,25 +93,29 @@
 </head>
 <body>
 
-<h1>Guess The Anime Opening</h1>
+<div id="container">
 
-<div class="autocomplete">
-  <input id="guessInput" placeholder="Devinez le nom de l'anime" autocomplete="off" />
-  <div id="autocomplete-list" class="autocomplete-items"></div>
+  <h1>Guess The Anime Opening</h1>
+
+  <div class="autocomplete">
+    <input id="guessInput" placeholder="Devinez le nom de l'anime" autocomplete="off" />
+    <div id="autocomplete-list" class="autocomplete-items"></div>
+  </div>
+  <button id="checkAnswerBtn">Valider</button>
+
+  <div style="margin-top:1rem;">
+    <button id="playTry1" disabled>Écoute 1 (3s)</button>
+    <button id="playTry2" disabled>Écoute 2 (5s)</button>
+    <button id="playTry3" disabled>Écoute 3 (10s)</button>
+    <button id="skipBtn" disabled>Passer</button>
+  </div>
+
+  <div id="result"></div>
+  <div id="timer"></div>
+
+  <!-- Player invisible -->
+  <div id="playerWrapper" style="display:none;"></div>
 </div>
-<button id="checkAnswerBtn">Valider</button>
-
-<div style="margin-top:1rem;">
-  <button id="playTry1" disabled>Écoute 1 (3s)</button>
-  <button id="playTry2" disabled>Écoute 2 (5s)</button>
-  <button id="playTry3" disabled>Écoute 3 (10s)</button>
-  <button id="skipBtn" disabled>Passer</button>
-</div>
-
-<div id="result"></div>
-
-<!-- Player invisible -->
-<div id="playerWrapper" style="display:none;"></div>
 
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
@@ -109,6 +133,8 @@
   let tries = 0; // nombre d'écoutes déjà jouées (1 à 3)
   const maxTries = 3;
   const tryDurations = [3, 5, 10];
+  let timerInterval;
+  let timerCount = 0;
 
   fetch('opening.json')
     .then(res => {
@@ -180,6 +206,11 @@
     tries = 0;
     document.getElementById("result").textContent = "";
     document.getElementById("result").className = "";
+    document.getElementById("timer").style.display = "none";
+    document.getElementById("timer").textContent = "";
+    clearInterval(timerInterval);
+    timerCount = 0;
+
     document.getElementById("guessInput").value = "";
     document.getElementById("guessInput").disabled = true;
     document.getElementById("checkAnswerBtn").disabled = true;
@@ -201,6 +232,10 @@
     document.getElementById("skipBtn").disabled = false;
     document.getElementById("result").textContent = "";
     document.getElementById("result").className = "";
+    document.getElementById("timer").style.display = "none";
+    clearInterval(timerInterval);
+    timerCount = 0;
+    document.getElementById("timer").textContent = "";
 
     player.loadVideoById({
       videoId: currentAnime.videoId,
@@ -225,6 +260,7 @@
       resultDiv.textContent = `✅ Bravo ! C’est ${currentAnime.title} - ${currentAnime.opening}`;
       resultDiv.className = "correct";
       blockInputs();
+      clearInterval(timerInterval);
       setTimeout(nextAnime, 2000);
     } else {
       // Mauvaise réponse
@@ -236,8 +272,8 @@
         // Si on n'est pas à la dernière écoute, on active le bouton Passer
         document.getElementById("skipBtn").disabled = false;
       } else {
-        // Après écoute 3, fin immédiate, révélation réponse
-        setTimeout(revealAnswer, 1500);
+        // Après écoute 3, démarrer timer 10s avant révélation
+        startFinalTimer();
       }
     }
   }
@@ -268,8 +304,28 @@
     }
   }
 
+  function startFinalTimer() {
+    const timerDiv = document.getElementById("timer");
+    timerCount = 10;
+    timerDiv.style.display = "block";
+    timerDiv.textContent = `Révélation dans ${timerCount} secondes...`;
+
+    document.getElementById("skipBtn").disabled = true;
+    timerInterval = setInterval(() => {
+      timerCount--;
+      if (timerCount > 0) {
+        timerDiv.textContent = `Révélation dans ${timerCount} secondes...`;
+      } else {
+        clearInterval(timerInterval);
+        timerDiv.textContent = "";
+        revealAnswer();
+      }
+    }, 1000);
+  }
+
   function revealAnswer() {
     const resultDiv = document.getElementById("result");
+    document.getElementById("timer").style.display = "none";
     resultDiv.textContent = `🔔 Temps écoulé ou tentatives épuisées ! La bonne réponse était : ${currentAnime.title} - ${currentAnime.opening}`;
     resultDiv.className = "correct";
     blockInputs();
@@ -337,3 +393,4 @@
 
 </body>
 </html>
+
