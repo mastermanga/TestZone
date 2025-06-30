@@ -2,139 +2,43 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <title>Guess the Anime</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #121212;
-      color: #fff;
-      text-align: center;
-      padding: 2rem;
-    }
-
-    button, input {
-      background-color: #1e1e1e;
-      color: #fff;
-      border: 1px solid #444;
-      border-radius: 6px;
-      padding: 0.6rem 1rem;
-      font-size: 1rem;
-      margin: 0.5rem;
-    }
-
-    button:hover {
-      background-color: #333;
-      cursor: pointer;
-    }
-
-    input {
-      width: 60%;
-    }
-
-    #playerWrapper {
-      margin-top: 1rem;
-      display: block; /* Affiché par défaut */
-    }
-
-    #player {
-      width: 480px;
-      height: 270px;
-      margin: auto;
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Guess the Anime Opening</title>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <h1>🎧 Devine l’anime à partir de l’opening</h1>
+  <div class="container">
+    <h1>🎧 Devine l’anime à partir de l’opening</h1>
+    <p id="instructions">Écoutez l’opening et devinez l’anime !</p>
 
-  <div>
-    <button id="playAudio" disabled>▶️ Jouer l’audio</button>
-    <button id="stopAudio" disabled>⏹️ Stopper l’audio</button>
-    <button id="toggleVideo">📺 Cacher la vidéo</button>
-  </div>
+    <div class="controls">
+      <button id="playAudio" disabled>▶️ Jouer</button>
+      <button id="stopAudio" disabled>⏹️ Stop</button>
+      <button id="toggleVideo">📺 Afficher la vidéo</button>
+    </div>
 
-  <div>
-    <input type="text" id="guessInput" placeholder="Nom de l'anime..." />
-    <button onclick="checkAnswer()">Valider</button>
-  </div>
+    <div class="input-container">
+      <input
+        type="text"
+        id="guessInput"
+        placeholder="Nom de l'anime..."
+        autocomplete="off"
+        aria-label="Entrez le nom de l’anime"
+      />
+      <div id="autocomplete-list" class="autocomplete-items"></div>
+      <button onclick="checkAnswer()">Valider</button>
+    </div>
 
-  <p id="result"></p>
+    <p id="result" aria-live="polite"></p>
 
-  <div id="playerWrapper">
-    <div id="player"></div>
+    <div id="playerWrapper" style="display: none;">
+      <div id="player"></div>
+    </div>
+
+    <button id="shareButton" class="hidden">📤 Partager mon score</button>
   </div>
 
   <script src="https://www.youtube.com/iframe_api"></script>
-  <script>
-    let player;
-    let stopInterval;
-    let videoVisible = true; // visible par défaut
-
-    const VIDEO_ID = "4QDEWNg5hAM";
-    const START_TIME = 0;
-    const END_TIME = 15;
-
-    function onYouTubeIframeAPIReady() {
-      player = new YT.Player("player", {
-        height: "270",
-        width: "480",
-        videoId: VIDEO_ID,
-        playerVars: {
-          autoplay: 0,
-          controls: 0,
-          modestbranding: 1
-        },
-        events: {
-          onReady: () => {
-            document.getElementById("playAudio").disabled = false;
-            document.getElementById("stopAudio").disabled = false;
-          },
-          onStateChange: onPlayerStateChange
-        }
-      });
-    }
-
-    document.getElementById("playAudio").addEventListener("click", () => {
-      if (player) {
-        player.seekTo(START_TIME);
-        player.playVideo();
-      }
-    });
-
-    document.getElementById("stopAudio").addEventListener("click", () => {
-      if (player) {
-        player.pauseVideo();
-        clearInterval(stopInterval);
-      }
-    });
-
-    document.getElementById("toggleVideo").addEventListener("click", () => {
-      const wrapper = document.getElementById("playerWrapper");
-      videoVisible = !videoVisible;
-      wrapper.style.display = videoVisible ? "block" : "none";
-      document.getElementById("toggleVideo").textContent = videoVisible ? "📺 Cacher la vidéo" : "📺 Afficher la vidéo";
-    });
-
-    function onPlayerStateChange(event) {
-      if (event.data === YT.PlayerState.PLAYING) {
-        clearInterval(stopInterval);
-        stopInterval = setInterval(() => {
-          if (player.getCurrentTime() >= END_TIME) {
-            player.pauseVideo();
-            clearInterval(stopInterval);
-          }
-        }, 300);
-      }
-    }
-
-    function checkAnswer() {
-      const input = document.getElementById("guessInput").value.trim().toLowerCase();
-      const correctAnswers = ["black clover", "ブラッククローバー"];
-      const isCorrect = correctAnswers.some(ans => ans.toLowerCase() === input);
-      document.getElementById("result").textContent = isCorrect
-        ? "✅ Bonne réponse !"
-        : "❌ Mauvaise réponse.";
-    }
-  </script>
+  <script src="script.js"></script>
 </body>
 </html>
-
