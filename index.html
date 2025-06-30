@@ -3,77 +3,49 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Guess The Anime Opening - 3 essais</title>
+<title>Guess The Anime Opening</title>
 <style>
   body {
-    background: #121212;
+    background-color: #121212;
     color: #eee;
     font-family: Arial, sans-serif;
-    margin: 2rem;
+    margin: 20px;
+  }
+  input, button, select {
+    font-size: 1rem;
+    padding: 8px;
+    margin: 5px 0;
+    border-radius: 4px;
+    border: none;
+  }
+  input, select {
+    width: 100%;
+    max-width: 400px;
   }
   button {
-    margin: 0.3rem;
-    padding: 0.5rem 1rem;
-    background: #333;
-    color: #eee;
-    border: none;
     cursor: pointer;
-    border-radius: 4px;
+    background-color: #333;
+    color: #eee;
+    border: 1px solid #555;
   }
   button:disabled {
-    opacity: 0.4;
+    background-color: #222;
+    color: #666;
     cursor: not-allowed;
   }
-  input {
-    padding: 0.5rem;
-    font-size: 1rem;
-    width: 300px;
-    margin-right: 1rem;
-    border-radius: 4px;
-    border: 1px solid #444;
-    background: #222;
-    color: #eee;
-  }
   #result {
-    margin-top: 1rem;
+    margin-top: 10px;
     font-weight: bold;
-    min-height: 1.5em;
-  }
-  #result.correct {
-    color: #4caf50;
-  }
-  #result.incorrect {
-    color: #f44336;
   }
   #timer {
-    margin-top: 1rem;
     font-size: 1.2rem;
-    font-weight: bold;
-    color: #ff9800;
+    margin-top: 15px;
+    color: #f55;
   }
-  .autocomplete-items {
-    position: absolute;
-    border: 1px solid #444;
-    border-top: none;
-    z-index: 99;
-    top: 55px;
-    left: 0;
-    right: 0;
-    background: #222;
-    max-height: 150px;
-    overflow-y: auto;
-    border-radius: 0 0 4px 4px;
-  }
-  .autocomplete-items div {
-    padding: 8px;
-    cursor: pointer;
-  }
-  .autocomplete-items div:hover {
-    background-color: #555;
-  }
-  .autocomplete {
-    position: relative;
-    display: inline-block;
+  #playerWrapper {
+    height: 0;
+    width: 0;
+    overflow: hidden;
   }
 </style>
 </head>
@@ -81,250 +53,217 @@
 
 <h1>Guess The Anime Opening</h1>
 
-<div class="autocomplete" style="width:320px;">
-  <input id="guessInput" placeholder="Devinez le nom de l'anime" autocomplete="off" />
-  <div id="autocomplete-list" class="autocomplete-items"></div>
-</div>
-<button id="submitAnswerBtn">Valider la réponse</button>
+<select id="guessInput">
+  <option value="" selected disabled>Choisissez un anime...</option>
+</select>
 
-<div style="margin-top:1rem;">
-  <button id="playTry1" disabled>Écoute 1 (3s)</button>
+<div>
+  <button id="playTry1">Écoute 1 (3s)</button>
   <button id="playTry2" disabled>Écoute 2 (5s)</button>
   <button id="playTry3" disabled>Écoute 3 (10s)</button>
 </div>
 
+<button id="checkAnswer">Valider la réponse</button>
+
 <div id="result"></div>
 <div id="timer"></div>
 
-<!-- Player caché -->
-<div id="playerWrapper" style="display:none;"></div>
+<div id="playerWrapper"></div>
 
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
-  // Extraction ID YouTube
-  function extractVideoId(url) {
-    const regExp = /^.*((youtu.be\/)|(v\/)|(watch\?))\??v?=?([^#&?]*).*/;
-    const match = url.match(regExp);
-    return (match && match[5].length === 11) ? match[5] : null;
-  }
+let animeList = [
+  { title: "My Hero Academia", youtubeUrl: "https://www.youtube.com/watch?v=L1FdEBTJXus" },
+  { title: "Hunter X Hunter", youtubeUrl: "https://www.youtube.com/watch?v=faqmNf_fZlE" },
+  { title: "Naruto", youtubeUrl: "https://www.youtube.com/watch?v=vxvP9zSOL7s" },
+  { title: "Attack on Titan", youtubeUrl: "https://www.youtube.com/watch?v=8OkpRK2_gVs" },
+  { title: "Jujutsu Kaisen", youtubeUrl: "https://www.youtube.com/watch?v=GwaRztMaoY0" }
+];
 
-  let animeList = [];
-  let currentIndex = 0;
-  let currentAnime;
-  let player;
-  let stopInterval;
-  let triesDone = 0; // 0 = pas écouté encore, max 3
-  const tryDurations = [3, 5, 10];
-  let timerInterval;
-  let countdown = 0;
+// Extraire videoId depuis l'URL Youtube
+function extractVideoId(url) {
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=)([^#&?]*).*/;
+  const match = url.match(regExp);
+  return (match && match[2].length === 11) ? match[2] : null;
+}
 
-  // Chargement JSON et init
-  fetch('opening.json')
-    .then(res => {
-      if (!res.ok) throw new Error('Erreur chargement JSON');
-      return res.json();
-    })
-    .then(data => {
-      animeList = data.map(anime => ({
-        title: anime.title,
-        altTitles: [anime.title.toLowerCase()],
-        opening: "Opening 1",
-        videoId: extractVideoId(anime.youtubeUrl),
-        startTime: 0
-      })).filter(a => a.videoId !== null);
+animeList.forEach(a => {
+  a.videoId = extractVideoId(a.youtubeUrl);
+});
 
-      if (animeList.length === 0) {
-        alert("Aucun anime valide dans opening.json !");
-        return;
-      }
-      currentIndex = 0;
-      currentAnime = animeList[currentIndex];
+// Variables d'état
+let currentIndex = 0;
+let player;
+let triesDone = 0;  // nombre d'écoutes faites (max 3)
+let maxTries = 3;
+let timerInterval;
+let timerCountdown = 10; // secondes pour timer final
 
-      if (typeof YT === 'undefined' || typeof YT.Player === 'undefined') {
-        window.onYouTubeIframeAPIReady = initPlayer;
-      } else {
-        initPlayer();
-      }
-    })
-    .catch(err => {
-      alert("Erreur lors du chargement du fichier opening.json : " + err);
-    });
+// Définir anime courant
+function currentAnime() {
+  return animeList[currentIndex];
+}
 
-  function initPlayer() {
-    player = new YT.Player('playerWrapper', {
-      height: '0',
-      width: '0',
-      videoId: currentAnime.videoId,
-      playerVars: {
-        autoplay: 0,
-        controls: 0,
-        modestbranding: 1,
-        start: 0,
-        end: 10,
-        rel: 0,
-        iv_load_policy: 3
+// Remplir la liste déroulante
+const guessInput = document.getElementById("guessInput");
+function populateSelect() {
+  animeList.forEach(anime => {
+    const option = document.createElement("option");
+    option.value = anime.title;
+    option.textContent = anime.title;
+    guessInput.appendChild(option);
+  });
+}
+populateSelect();
+
+// Initialisation du player YouTube
+function onYouTubeIframeAPIReady() {
+  player = new YT.Player('playerWrapper', {
+    height: '0',
+    width: '0',
+    videoId: currentAnime().videoId,
+    playerVars: {
+      autoplay: 0,
+      controls: 0,
+      modestbranding: 1,
+      rel: 0,
+      iv_load_policy: 3
+    },
+    events: {
+      onReady: () => {
+        enableButton(1);
+        disableButton(2);
+        disableButton(3);
+        triesDone = 0;
+        resetUI();
       },
-      events: {
-        onStateChange: onPlayerStateChange
-      }
-    });
-    enableButton(1);
-    disableButton(2);
-    disableButton(3);
-    triesDone = 0;
-    resetUI();
-  }
-
-  function onPlayerStateChange(event) {
-    if (event.data === YT.PlayerState.PLAYING) {
-      clearInterval(stopInterval);
-      stopInterval = setInterval(() => {
-        if (player.getCurrentTime() >= currentAnime.startTime + tryDurations[triesDone-1]) {
-          player.pauseVideo();
-          clearInterval(stopInterval);
-          if (triesDone === 3) {
-            startResponseTimer(10);
-          }
-        }
-      }, 200);
+      onStateChange: onPlayerStateChange
     }
-  }
+  });
+}
 
-  function enableButton(n) {
-    document.getElementById('playTry'+n).disabled = false;
-  }
-  function disableButton(n) {
-    document.getElementById('playTry'+n).disabled = true;
-  }
-  function resetUI() {
-    document.getElementById('result').textContent = '';
-    document.getElementById('result').className = '';
-    document.getElementById('timer').textContent = '';
-    document.getElementById('guessInput').value = '';
-  }
+// Gestion des boutons
+function enableButton(n) {
+  document.getElementById(`playTry${n}`).disabled = false;
+}
+function disableButton(n) {
+  document.getElementById(`playTry${n}`).disabled = true;
+}
 
-  function playTry(n) {
-    if (n !== triesDone + 1) {
-      alert("Vous devez écouter les extraits dans l'ordre.");
-      return;
-    }
-    triesDone = n;
-    player.loadVideoById({
-      videoId: currentAnime.videoId,
-      startSeconds: currentAnime.startTime,
-      endSeconds: currentAnime.startTime + tryDurations[triesDone - 1]
-    });
-    player.playVideo();
+function resetUI() {
+  document.getElementById("result").textContent = "";
+  document.getElementById("timer").textContent = "";
+  guessInput.value = "";
+  clearInterval(timerInterval);
+  timerCountdown = 10;
+}
 
-    // Gestion boutons
+// Jouer la vidéo pour une écoute donnée (durée en secondes)
+function playTry(n) {
+  if (!player) return;
+  if (triesDone + 1 !== n) return; // respecter l'ordre
+
+  let durations = [3, 5, 10];
+  let start = 0;
+  let duration = durations[n - 1];
+  let end = start + duration;
+
+  player.loadVideoById({
+    videoId: currentAnime().videoId,
+    startSeconds: start,
+    endSeconds: end,
+    suggestedQuality: 'small'
+  });
+  player.playVideo();
+
+  triesDone = n;
+
+  // Après écoute, activer suivant si possible
+  if (triesDone < maxTries) {
     enableButton(triesDone + 1);
-    for(let i=triesDone+2; i<=3; i++) disableButton(i);
-
-    // Après écoute 3 on bloque tous sauf la validation
-    if (triesDone === 3) {
-      disableButton(1);
-      disableButton(2);
-      disableButton(3);
-    }
-    clearInterval(timerInterval);
-    document.getElementById('timer').textContent = '';
   }
+  disableButton(triesDone);
+}
 
-  function checkAnswer() {
-    clearInterval(timerInterval);
-    const input = document.getElementById('guessInput').value.trim().toLowerCase();
-    const resDiv = document.getElementById('result');
-
-    if (!input) {
-      alert("Veuillez entrer un nom.");
-      return;
+function onPlayerStateChange(event) {
+  if (event.data === YT.PlayerState.ENDED) {
+    if (triesDone === maxTries) {
+      startFinalTimer();
     }
+  }
+}
 
-    // On vérifie la réponse
-    if (currentAnime.altTitles.includes(input)) {
-      resDiv.textContent = `✅ Bravo ! C’est ${currentAnime.title} - ${currentAnime.opening}`;
-      resDiv.className = "correct";
-      setTimeout(nextAnime, 3000);
+// Timer final 10s pour répondre après écoute 3
+function startFinalTimer() {
+  let timerEl = document.getElementById("timer");
+  timerCountdown = 10;
+  timerEl.textContent = `⏳ Vous avez ${timerCountdown} secondes pour répondre...`;
+
+  timerInterval = setInterval(() => {
+    timerCountdown--;
+    if (timerCountdown <= 0) {
+      clearInterval(timerInterval);
+      timerEl.textContent = "⏰ Temps écoulé ! Vous avez perdu.";
+      nextAnime();
     } else {
-      resDiv.textContent = `❌ Faux.`;
-      resDiv.className = "incorrect";
+      timerEl.textContent = `⏳ Vous avez ${timerCountdown} secondes pour répondre...`;
+    }
+  }, 1000);
+}
 
-      // Si pas à la dernière écoute on lance la suivante automatiquement
-      if (triesDone < 3) {
-        alert("Réponse incorrecte, écoute suivante lancée.");
-        playTry(triesDone + 1);
-      } else {
-        alert("Réponse incorrecte, plus d'écoutes disponibles. Perdu !");
-        setTimeout(nextAnime, 2000);
-      }
+// Vérification de la réponse
+function checkAnswer() {
+  const answer = guessInput.value.trim().toLowerCase();
+  if (!answer) {
+    alert("Veuillez choisir un anime.");
+    return;
+  }
+
+  let correct = currentAnime().title.toLowerCase() === answer;
+
+  let resultEl = document.getElementById("result");
+
+  if (correct) {
+    resultEl.textContent = `✅ Bravo ! C’est bien "${currentAnime().title}" !`;
+    clearInterval(timerInterval);
+    setTimeout(nextAnime, 2000);
+  } else {
+    resultEl.textContent = `❌ Faux... On passe à l'écoute suivante.`;
+    if (triesDone < maxTries) {
+      playTry(triesDone + 1);
+    } else {
+      resultEl.textContent += " C'est perdu !";
+      setTimeout(nextAnime, 2000);
     }
   }
+}
 
-  function startResponseTimer(seconds) {
-    countdown = seconds;
-    const timerDiv = document.getElementById('timer');
-    timerDiv.textContent = `Temps restant pour répondre : ${countdown}s`;
-    timerInterval = setInterval(() => {
-      countdown--;
-      if (countdown <= 0) {
-        clearInterval(timerInterval);
-        timerDiv.textContent = "Temps écoulé, vous avez perdu !";
-        document.getElementById('result').textContent = `❌ Temps écoulé, la réponse était : ${currentAnime.title}`;
-        document.getElementById('result').className = "incorrect";
-        setTimeout(nextAnime, 4000);
-      } else {
-        timerDiv.textContent = `Temps restant pour répondre : ${countdown}s`;
-      }
-    }, 1000);
+// Passer à l'anime suivant
+function nextAnime() {
+  clearInterval(timerInterval);
+  timerCountdown = 10;
+  currentIndex++;
+  if (currentIndex >= animeList.length) {
+    currentIndex = 0;
   }
-
-  function nextAnime() {
-    clearInterval(stopInterval);
-    clearInterval(timerInterval);
-    triesDone = 0;
-    currentIndex++;
-    if (currentIndex >= animeList.length) currentIndex = 0;
-    currentAnime = animeList[currentIndex];
-    resetUI();
+  triesDone = 0;
+  resetUI();
+  if (player) {
+    player.loadVideoById(currentAnime().videoId, 0);
     enableButton(1);
     disableButton(2);
     disableButton(3);
-    player.cueVideoById(currentAnime.videoId);
   }
+}
 
-  // Autocomplétion
-  const input = document.getElementById("guessInput");
-  const autocompleteList = document.getElementById("autocomplete-list");
+// Gestion boutons écoute
+document.getElementById("playTry1").addEventListener("click", () => playTry(1));
+document.getElementById("playTry2").addEventListener("click", () => playTry(2));
+document.getElementById("playTry3").addEventListener("click", () => playTry(3));
 
-  input.addEventListener("input", function() {
-    const val = this.value.toLowerCase();
-    autocompleteList.innerHTML = "";
-    if (!val) return;
+// Bouton valider réponse
+document.getElementById("checkAnswer").addEventListener("click", checkAnswer);
+</script>
 
-    const suggestions = animeList.filter(a => a.title.toLowerCase().startsWith(val));
-    suggestions.forEach(a => {
-      const div = document.createElement("div");
-      div.textContent = a.title;
-      div.addEventListener("click", () => {
-        input.value = a.title;
-        autocompleteList.innerHTML = "";
-      });
-      autocompleteList.appendChild(div);
-    });
-  });
-
-  document.addEventListener("click", e => {
-    if (!e.target.closest(".autocomplete") && e.target !== input) {
-      autocompleteList.innerHTML = "";
-    }
-  });
-
-  // Boutons écoute
-  document.getElementById("playTry1").addEventListener("click", () => playTry(1));
-  document.getElementById("playTry2").addEventListener("click", () => playTry(2));
-  document.getElementById("playTry3").addEventListener("click", () => playTry(3));
-  document.getElementById("submitAnswerBtn").addEventListener("click", checkAnswer);
-
-  // Entrée clavier valide réponse
-  input
-
+</body>
+</html>
