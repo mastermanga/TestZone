@@ -85,6 +85,7 @@
   <button id="playTry1" disabled>Écoute 1 (3s)</button>
   <button id="playTry2" disabled>Écoute 2 (5s)</button>
   <button id="playTry3" disabled>Écoute 3 (10s)</button>
+  <button id="skipBtn" disabled>Passer</button>
 </div>
 
 <div id="result"></div>
@@ -105,7 +106,7 @@
   let player;
   let stopInterval;
   let currentAnime;
-  let tries = 0;
+  let tries = 0; // nombre d'écoutes déjà jouées (1 à 3)
   const maxTries = 3;
   const tryDurations = [3, 5, 10];
 
@@ -159,7 +160,7 @@
         onStateChange: onPlayerStateChange
       }
     });
-    document.getElementById("playTry1").disabled = false;
+    resetControls();
   }
 
   function onPlayerStateChange(event) {
@@ -175,22 +176,106 @@
     }
   }
 
+  function resetControls() {
+    tries = 0;
+    document.getElementById("result").textContent = "";
+    document.getElementById("result").className = "";
+    document.getElementById("guessInput").value = "";
+    document.getElementById("guessInput").disabled = true;
+    document.getElementById("checkAnswerBtn").disabled = true;
+
+    document.getElementById("playTry1").disabled = false;
+    document.getElementById("playTry2").disabled = true;
+    document.getElementById("playTry3").disabled = true;
+    document.getElementById("skipBtn").disabled = true;
+  }
+
   function playTry(n) {
     if (n !== tries + 1) {
       alert("Vous devez écouter les extraits dans l'ordre.");
       return;
     }
     tries = n;
+    document.getElementById("guessInput").disabled = false;
+    document.getElementById("checkAnswerBtn").disabled = false;
+    document.getElementById("skipBtn").disabled = false;
+    document.getElementById("result").textContent = "";
+    document.getElementById("result").className = "";
+
     player.loadVideoById({
       videoId: currentAnime.videoId,
       startSeconds: currentAnime.startTime,
-      endSeconds: currentAnime.startTime + tryDurations[tries-1]
+      endSeconds: currentAnime.startTime + tryDurations[tries - 1]
     });
     player.playVideo();
 
+    // Mise à jour boutons écoute
     document.getElementById("playTry1").disabled = tries >= 1;
     document.getElementById("playTry2").disabled = tries < 1 || tries >= 2;
     document.getElementById("playTry3").disabled = tries < 2 || tries >= 3;
+  }
+
+  function checkAnswer() {
+    const inputVal = document.getElementById("guessInput").value.trim().toLowerCase();
+    const resultDiv = document.getElementById("result");
+    if (!inputVal) return;
+
+    if (currentAnime.altTitles.includes(inputVal)) {
+      // Bonne réponse
+      resultDiv.textContent = `✅ Bravo ! C’est ${currentAnime.title} - ${currentAnime.opening}`;
+      resultDiv.className = "correct";
+      blockInputs();
+      setTimeout(nextAnime, 2000);
+    } else {
+      // Mauvaise réponse
+      resultDiv.textContent = `❌ Faux. Ce n'est pas "${document.getElementById("guessInput").value}".`;
+      resultDiv.className = "incorrect";
+      blockInputs();
+
+      if (tries < maxTries) {
+        // Si on n'est pas à la dernière écoute, on active le bouton Passer
+        document.getElementById("skipBtn").disabled = false;
+      } else {
+        // Après écoute 3, fin immédiate, révélation réponse
+        setTimeout(revealAnswer, 1500);
+      }
+    }
+  }
+
+  function blockInputs() {
+    document.getElementById("guessInput").disabled = true;
+    document.getElementById("checkAnswerBtn").disabled = true;
+    document.getElementById("skipBtn").disabled = false;
+  }
+
+  function skipTry() {
+    if (tries < maxTries) {
+      if (tries === maxTries) {
+        // Si on est à la dernière écoute, révélation directe
+        revealAnswer();
+        return;
+      }
+      // Passe à la prochaine écoute
+      document.getElementById("result").textContent = "";
+      document.getElementById("result").className = "";
+      document.getElementById("guessInput").value = "";
+      document.getElementById("guessInput").disabled = true;
+      document.getElementById("checkAnswerBtn").disabled = true;
+
+      document.getElementById("skipBtn").disabled = true;
+      // Active la prochaine écoute
+      document.getElementById(`playTry${tries + 1}`).disabled = false;
+    }
+  }
+
+  function revealAnswer() {
+    const resultDiv = document.getElementById("result");
+    resultDiv.textContent = `🔔 Temps écoulé ou tentatives épuisées ! La bonne réponse était : ${currentAnime.title} - ${currentAnime.opening}`;
+    resultDiv.className = "correct";
+    blockInputs();
+    document.getElementById("skipBtn").disabled = true;
+
+    setTimeout(nextAnime, 4000);
   }
 
   function nextAnime() {
@@ -198,33 +283,13 @@
     currentIndex++;
     if (currentIndex >= animeList.length) currentIndex = 0;
     currentAnime = animeList[currentIndex];
-    document.getElementById("result").textContent = "";
-    document.getElementById("guessInput").value = "";
-
-    document.getElementById("playTry1").disabled = false;
-    document.getElementById("playTry2").disabled = true;
-    document.getElementById("playTry3").disabled = true;
+    resetControls();
 
     if (player) {
       player.cueVideoById({
         videoId: currentAnime.videoId,
         startSeconds: currentAnime.startTime
       });
-    }
-  }
-
-  function checkAnswer() {
-    const input = document.getElementById("guessInput").value.trim().toLowerCase();
-    const resultDiv = document.getElementById("result");
-
-    if (currentAnime.altTitles.includes(input)) {
-      resultDiv.textContent = `✅ Bravo ! C’est ${currentAnime.title} - ${currentAnime.opening}`;
-      resultDiv.className = "correct";
-      nextAnime();
-    } else {
-      resultDiv.textContent = `❌ Faux. C’était ${currentAnime.title} - ${currentAnime.opening}`;
-      resultDiv.className = "incorrect";
-      nextAnime();
     }
   }
 
@@ -260,6 +325,7 @@
   document.getElementById("playTry2").addEventListener("click", () => playTry(2));
   document.getElementById("playTry3").addEventListener("click", () => playTry(3));
   document.getElementById("checkAnswerBtn").addEventListener("click", checkAnswer);
+  document.getElementById("skipBtn").addEventListener("click", skipTry);
 
   input.addEventListener("keydown", e => {
     if (e.key === "Enter") {
@@ -271,4 +337,3 @@
 
 </body>
 </html>
-
