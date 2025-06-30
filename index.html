@@ -44,16 +44,42 @@
   #result.incorrect {
     color: #f44336;
   }
+  /* Styles autocomplétion */
+  .autocomplete-items {
+    position: absolute;
+    border: 1px solid #444;
+    border-top: none;
+    z-index: 99;
+    top: 55px;
+    left: 0;
+    right: 0;
+    background: #222;
+    max-height: 150px;
+    overflow-y: auto;
+    border-radius: 0 0 4px 4px;
+  }
+  .autocomplete-items div {
+    padding: 8px;
+    cursor: pointer;
+  }
+  .autocomplete-items div:hover {
+    background-color: #555;
+  }
+  .autocomplete {
+    position: relative;
+    display: inline-block;
+  }
 </style>
 </head>
 <body>
 
 <h1>Guess The Anime Opening</h1>
 
-<div>
+<div class="autocomplete">
   <input id="guessInput" placeholder="Devinez le nom de l'anime" autocomplete="off" />
-  <button id="checkAnswerBtn">Valider</button>
+  <div id="autocomplete-list" class="autocomplete-items"></div>
 </div>
+<button id="checkAnswerBtn">Valider</button>
 
 <div style="margin-top:1rem;">
   <button id="playTry1" disabled>Écoute 1 (3s)</button>
@@ -68,7 +94,6 @@
 
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
-  // Extraction de l'ID vidéo YouTube
   function extractVideoId(url) {
     const regExp = /^.*((youtu.be\/)|(v\/)|(watch\?))\??v?=?([^#&?]*).*/;
     const match = url.match(regExp);
@@ -80,13 +105,10 @@
   let player;
   let stopInterval;
   let currentAnime;
-  let tries = 0; // nombre d'écoutes déjà utilisées (max 3)
+  let tries = 0;
   const maxTries = 3;
-
-  // Durées en secondes pour chaque écoute
   const tryDurations = [3, 5, 10];
 
-  // Charger la liste depuis opening.json
   fetch('opening.json')
     .then(res => {
       if (!res.ok) throw new Error('Erreur chargement JSON');
@@ -95,11 +117,11 @@
     .then(data => {
       animeList = data.map(anime => ({
         title: anime.title,
-        altTitles: [anime.title.toLowerCase()], // tout en minuscules pour comparaison
+        altTitles: [anime.title.toLowerCase()],
         opening: "Opening 1",
         videoId: extractVideoId(anime.youtubeUrl),
         startTime: 0
-      })).filter(a => a.videoId !== null); // filtrer vidéos valides
+      })).filter(a => a.videoId !== null);
 
       if (animeList.length === 0) {
         alert("Aucun anime valide dans opening.json !");
@@ -109,9 +131,7 @@
       currentIndex = 0;
       currentAnime = animeList[currentIndex];
 
-      // Initialiser YouTube Player après chargement de l'API
       if (typeof YT === 'undefined' || typeof YT.Player === 'undefined') {
-        // Attendre l'API
         window.onYouTubeIframeAPIReady = initPlayer;
       } else {
         initPlayer();
@@ -123,7 +143,7 @@
 
   function initPlayer() {
     player = new YT.Player('playerWrapper', {
-      height: '0', // invisible
+      height: '0',
       width: '0',
       videoId: currentAnime.videoId,
       playerVars: {
@@ -139,8 +159,6 @@
         onStateChange: onPlayerStateChange
       }
     });
-
-    // Activer bouton écoute 1
     document.getElementById("playTry1").disabled = false;
   }
 
@@ -163,8 +181,6 @@
       return;
     }
     tries = n;
-
-    // Charger la vidéo au début
     player.loadVideoById({
       videoId: currentAnime.videoId,
       startSeconds: currentAnime.startTime,
@@ -172,27 +188,23 @@
     });
     player.playVideo();
 
-    // Gérer activation boutons
     document.getElementById("playTry1").disabled = tries >= 1;
     document.getElementById("playTry2").disabled = tries < 1 || tries >= 2;
     document.getElementById("playTry3").disabled = tries < 2 || tries >= 3;
   }
 
-  // Passage au prochain anime
   function nextAnime() {
     tries = 0;
     currentIndex++;
-    if (currentIndex >= animeList.length) currentIndex = 0; // boucle
+    if (currentIndex >= animeList.length) currentIndex = 0;
     currentAnime = animeList[currentIndex];
     document.getElementById("result").textContent = "";
     document.getElementById("guessInput").value = "";
 
-    // Réinitialiser boutons écoute
     document.getElementById("playTry1").disabled = false;
     document.getElementById("playTry2").disabled = true;
     document.getElementById("playTry3").disabled = true;
 
-    // Charger vidéo invisible dans player (pas en autoplay)
     if (player) {
       player.cueVideoById({
         videoId: currentAnime.videoId,
@@ -201,7 +213,6 @@
     }
   }
 
-  // Vérification de la réponse
   function checkAnswer() {
     const input = document.getElementById("guessInput").value.trim().toLowerCase();
     const resultDiv = document.getElementById("result");
@@ -217,17 +228,44 @@
     }
   }
 
-  // Gestion boutons écoute
+  // Gestion de l'autocomplétion
+  const input = document.getElementById("guessInput");
+  const autocompleteList = document.getElementById("autocomplete-list");
+
+  input.addEventListener("input", function() {
+    const val = this.value.toLowerCase();
+    autocompleteList.innerHTML = "";
+    if (!val) return;
+
+    const suggestions = animeList.filter(a => a.title.toLowerCase().startsWith(val));
+    suggestions.forEach(a => {
+      const div = document.createElement("div");
+      div.textContent = a.title;
+      div.addEventListener("click", () => {
+        input.value = a.title;
+        autocompleteList.innerHTML = "";
+        checkAnswer();
+      });
+      autocompleteList.appendChild(div);
+    });
+  });
+
+  document.addEventListener("click", e => {
+    if (!e.target.closest(".autocomplete") && e.target !== input) {
+      autocompleteList.innerHTML = "";
+    }
+  });
+
   document.getElementById("playTry1").addEventListener("click", () => playTry(1));
   document.getElementById("playTry2").addEventListener("click", () => playTry(2));
   document.getElementById("playTry3").addEventListener("click", () => playTry(3));
-
-  // Bouton valider
   document.getElementById("checkAnswerBtn").addEventListener("click", checkAnswer);
 
-  // Touche Entrée valide la réponse
-  document.getElementById("guessInput").addEventListener("keydown", e => {
-    if (e.key === "Enter") checkAnswer();
+  input.addEventListener("keydown", e => {
+    if (e.key === "Enter") {
+      checkAnswer();
+      autocompleteList.innerHTML = "";
+    }
   });
 </script>
 
