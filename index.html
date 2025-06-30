@@ -2,40 +2,62 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <title>Guess the Anime</title>
+  <title>Guess the Anime - Mode Dark</title>
   <style>
     body {
-      font-family: sans-serif;
+      font-family: Arial, sans-serif;
+      background-color: #121212;
+      color: #ffffff;
       text-align: center;
       padding: 2rem;
     }
-    iframe {
-      width: 0;
-      height: 0;
-      border: none;
-    }
-    input, button {
-      padding: 0.5rem;
+
+    button, input {
+      background-color: #1e1e1e;
+      color: #ffffff;
+      border: 1px solid #444;
+      border-radius: 6px;
+      padding: 0.6rem 1rem;
       font-size: 1rem;
-      margin-top: 1rem;
+      margin: 1rem;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #333;
+      cursor: pointer;
+    }
+
+    #player {
+      display: none;
+    }
+
+    input {
+      width: 60%;
     }
   </style>
 </head>
 <body>
   <h1>🎧 Devine l’anime à partir de l’opening</h1>
 
-  <div id="player"></div>
+  <button onclick="playClip()">▶️ Jouer l’extrait</button>
 
-  <input type="text" id="guessInput" placeholder="Nom de l'anime" />
-  <button onclick="checkAnswer()">Valider</button>
+  <div>
+    <input type="text" id="guessInput" placeholder="Nom de l'anime..." />
+    <button onclick="checkAnswer()">Valider</button>
+  </div>
 
   <p id="result"></p>
+
+  <div id="player"></div>
 
   <!-- YouTube IFrame API -->
   <script src="https://www.youtube.com/iframe_api"></script>
   <script>
     let player;
-    const VIDEO_ID = "4QDEWNg5hAM"; // ta vidéo
+    let hasPlayed = false;
+
+    const VIDEO_ID = "4QDEWNg5hAM";
     const START_TIME = 0;
     const END_TIME = 15;
     const CORRECT_ANSWERS = ["Black Clover", "ブラッククローバー"];
@@ -46,40 +68,46 @@
         width: "0",
         videoId: VIDEO_ID,
         playerVars: {
-          autoplay: 1,
+          autoplay: 0,
           start: START_TIME,
           end: END_TIME,
           controls: 0,
           modestbranding: 1
         },
         events: {
-          onReady: onPlayerReady,
           onStateChange: onPlayerStateChange
         }
       });
     }
 
-    function onPlayerReady(event) {
-      event.target.playVideo();
+    function playClip() {
+      if (!hasPlayed && player) {
+        player.seekTo(START_TIME);
+        player.playVideo();
+        hasPlayed = true;
+      } else {
+        player.seekTo(START_TIME);
+        player.playVideo();
+      }
     }
 
     function onPlayerStateChange(event) {
       if (event.data === YT.PlayerState.PLAYING) {
-        const interval = setInterval(() => {
+        const stopAt = setInterval(() => {
           if (player.getCurrentTime() >= END_TIME) {
             player.pauseVideo();
-            clearInterval(interval);
+            clearInterval(stopAt);
           }
         }, 500);
       }
     }
 
     function checkAnswer() {
-      const userGuess = document.getElementById("guessInput").value.trim().toLowerCase();
-      const isCorrect = CORRECT_ANSWERS.some(ans => userGuess === ans.toLowerCase());
-      document.getElementById("result").textContent = isCorrect
+      const input = document.getElementById("guessInput").value.trim().toLowerCase();
+      const correct = CORRECT_ANSWERS.some(ans => input === ans.toLowerCase());
+      document.getElementById("result").textContent = correct
         ? "✅ Bonne réponse !"
-        : "❌ Mauvaise réponse. Réessaie !";
+        : "❌ Mauvaise réponse.";
     }
   </script>
 </body>
