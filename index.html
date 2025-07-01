@@ -255,20 +255,27 @@
     if (!inputVal) return;
 
     if (currentAnime.altTitles.includes(inputVal)) {
-      // Bonne réponse
+      // Correct answer
       resultDiv.textContent = `✅ Bravo ! C’est ${currentAnime.title} - ${currentAnime.opening}`;
       resultDiv.className = "correct";
       blockInputs();
       showNextButton();
     } else {
-      // Mauvaise réponse
-      resultDiv.textContent = `❌ Faux. Ce n'est pas "${document.getElementById("guessInput").value}".`;
+      // Incorrect answer
+      resultDiv.textContent = `❌ Faux. Ce n'est pas "${document.getElementById("guessInput").value}". ${tries < maxTries ? `Il vous reste ${maxTries - tries} tentative(s).` : ''}`;
       resultDiv.className = "incorrect";
-      blockInputs();
-
+      
+      // Clear the input for the next guess
+      document.getElementById("guessInput").value = "";
+      
       if (tries < maxTries) {
+        // Enable the next try button if available
+        document.getElementById(`playTry${tries + 1}`).disabled = false;
+        document.getElementById("guessInput").disabled = false;
+        document.getElementById("checkAnswerBtn").disabled = false;
         document.getElementById("skipBtn").disabled = false;
       } else {
+        // No more tries left, reveal the answer
         revealAnswer();
       }
     }
@@ -324,13 +331,7 @@
     revealAnswer();
   });
 
-  // Bouton Suivant
-  document.getElementById("nextBtn").addEventListener("click", () => {
-    document.getElementById("nextBtn").style.display = "none";
-    nextAnime();
-  });
-
-  // Autocomplete basique (optionnel, si tu veux)
+  // Autocomplete basique
   const input = document.getElementById("guessInput");
   input.addEventListener("input", function() {
     closeAllLists();
@@ -360,4 +361,3 @@
 
 </body>
 </html>
-
