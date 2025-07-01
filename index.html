@@ -5,102 +5,103 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Guess The Anime Opening</title>
 <style>
-  body {
-    background-color: #121212;
+  html, body {
+    height: 100%;
+    margin: 0;
+    background: #121212;
     color: #eee;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    margin: 0; padding: 0;
+    font-family: Arial, sans-serif;
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    text-align: center;
+    min-height: 100vh;
+    padding: 1rem;
   }
   #container {
-    background-color: #1e1e1e;
-    border-radius: 10px;
-    padding: 2rem;
-    width: 350px;
-    box-shadow: 0 0 15px #00bcd4;
-    text-align: center;
-  }
-  input[type=text] {
+    max-width: 480px;
     width: 100%;
-    padding: 10px;
-    border-radius: 5px;
-    border: none;
-    margin-top: 0.5rem;
-    font-size: 1rem;
-    background-color: #2c2c2c;
-    color: #eee;
-  }
-  input[type=text]:disabled {
-    background-color: #555;
-    color: #bbb;
   }
   button {
-    margin: 0.3rem 0.2rem;
-    padding: 0.6rem 1.2rem;
-    border-radius: 5px;
+    margin: 0.3rem;
+    padding: 0.5rem 1rem;
+    background: #333;
+    color: #eee;
     border: none;
-    background-color: #00bcd4;
-    color: #121212;
-    font-weight: bold;
     cursor: pointer;
+    border-radius: 4px;
     transition: background-color 0.3s ease;
   }
+  button:hover:not(:disabled) {
+    background-color: #555;
+  }
   button:disabled {
-    background-color: #444;
+    opacity: 0.4;
     cursor: not-allowed;
   }
-  button:hover:not(:disabled) {
-    background-color: #0097a7;
+  input {
+    padding: 0.5rem;
+    font-size: 1rem;
+    width: 300px;
+    margin-right: 1rem;
+    border-radius: 4px;
+    border: 1px solid #444;
+    background: #222;
+    color: #eee;
   }
   #result {
     margin-top: 1rem;
-    font-size: 1.2rem;
     font-weight: bold;
+    min-height: 1.5em;
+    opacity: 0;
+    transition: opacity 0.5s ease;
   }
   #result.correct {
     color: #4caf50;
+    opacity: 1;
   }
   #result.incorrect {
     color: #f44336;
+    opacity: 1;
   }
   #failedAttempts {
-    white-space: pre-wrap;
+    color: #f44336;
     margin-top: 0.5rem;
-    color: #ff6666;
-    min-height: 2rem;
+    white-space: pre-line;
+    text-align: left;
+    max-height: 5em;
+    overflow-y: auto;
+    font-size: 0.9rem;
   }
   .autocomplete-items {
     position: absolute;
-    border: 1px solid #d4d4d4;
-    border-bottom: none;
+    border: 1px solid #444;
     border-top: none;
     z-index: 99;
-    top: 120px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 320px;
-    background-color: #2c2c2c;
+    top: 55px;
+    left: 0;
+    right: 0;
+    background: #222;
     max-height: 150px;
     overflow-y: auto;
-    border-radius: 0 0 5px 5px;
+    border-radius: 0 0 4px 4px;
   }
   .autocomplete-items div {
-    padding: 10px;
+    padding: 8px;
     cursor: pointer;
-    background-color: #2c2c2c;
-    color: #eee;
   }
   .autocomplete-items div:hover {
-    background-color: #00bcd4;
-    color: #121212;
+    background-color: #555;
+  }
+  .autocomplete {
+    position: relative;
+    display: inline-block;
   }
   #timer {
     margin-top: 1rem;
-    font-size: 1rem;
-    color: #00bcd4;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #ff9800;
     display: none;
   }
 </style>
@@ -108,14 +109,14 @@
 <body>
 <div id="container">
   <h1>Guess The Anime Opening</h1>
-  <div class="autocomplete" style="position:relative;">
-    <input id="guessInput" placeholder="Devinez le nom de l'anime" autocomplete="off" />
+  <div class="autocomplete">
+    <input id="guessInput" placeholder="Devinez le nom de l'anime" autocomplete="off" disabled />
     <div id="autocomplete-list" class="autocomplete-items"></div>
   </div>
   <div style="margin-top:1rem;">
-    <button id="playTry1">Écoute 1 (3s)</button>
-    <button id="playTry2" disabled>Écoute 2 (5s)</button>
-    <button id="playTry3" disabled>Écoute 3 (15s)</button>
+    <button id="playTry1" disabled>Écoute 1 (0s à 3s)</button>
+    <button id="playTry2" disabled>Écoute 2 (3s à 8s)</button>
+    <button id="playTry3" disabled>Écoute 3 (0s à 15s)</button>
   </div>
   <div id="failedAttempts"></div>
   <div id="result"></div>
@@ -139,24 +140,39 @@
   let currentAnime;
   let tries = 0;
   const maxTries = 3;
-  const tryDurations = [3, 5, 15];
+  const tryDurations = [
+    [0, 3],   // écoute 1 : 0s -> 3s
+    [3, 8],   // écoute 2 : 3s -> 8s
+    [0, 15]   // écoute 3 : 0s -> 15s
+  ];
   let failedAnswers = [];
+  let attemptsThisTry = false;
 
+  // Chargement et préparation des données
   fetch('opening.json')
     .then(res => res.json())
     .then(data => {
+      // Création d'une liste plate avec une entrée par vidéo
       animeList = data.flatMap(anime =>
         anime.youtubeUrls.map((url, index) => ({
           title: anime.title,
           altTitles: [anime.title.toLowerCase()],
-          opening: `Opening ${index + 1}`,
+          youtubeTitle: anime.youtubeTitles ? anime.youtubeTitles[index] : `Opening ${index + 1}`,
           videoId: extractVideoId(url),
-          startTime: index === 1 ? 3 : 0
+          startTime: 0 // on gère via tryDurations
         }))
       ).filter(a => a.videoId);
+
+      // On ne garde qu'un seul titre par anime pour la liste de saisie
+      const uniqueTitlesSet = new Set(animeList.map(a => a.title));
+      uniqueTitles = Array.from(uniqueTitlesSet);
+
+      // On shuffle la liste complète pour le quiz
       shuffle(animeList);
+
       currentIndex = 0;
       currentAnime = animeList[currentIndex];
+
       if (typeof YT === 'undefined' || typeof YT.Player === 'undefined') {
         window.onYouTubeIframeAPIReady = initPlayer;
       } else {
@@ -178,9 +194,6 @@
       videoId: currentAnime.videoId,
       playerVars: { autoplay: 0, controls: 0, modestbranding: 1, rel: 0, iv_load_policy: 3 },
       events: {
-        onReady: (event) => {
-          player.setVolume(50);
-        },
         onStateChange: onPlayerStateChange
       }
     });
@@ -192,17 +205,19 @@
       clearInterval(stopInterval);
       stopInterval = setInterval(() => {
         const currentTime = player.getCurrentTime();
-        if (currentTime >= (currentAnime.startTime + tryDurations[tries - 1])) {
+        let [start, end] = tryDurations[tries - 1];
+        if (currentTime >= end) {
           player.pauseVideo();
           clearInterval(stopInterval);
         }
-      }, 200);
+      }, 100);
     }
   }
 
   function resetControls() {
     tries = 0;
     failedAnswers = [];
+    attemptsThisTry = false;
     updateFailedAttempts();
     document.getElementById("result").textContent = "";
     document.getElementById("result").className = "";
@@ -219,54 +234,56 @@
   function playTry(n) {
     if (n !== tries + 1) return alert("Vous devez écouter les extraits dans l'ordre.");
     tries = n;
+    attemptsThisTry = false;
     document.getElementById("guessInput").disabled = false;
     document.getElementById("result").textContent = "";
     document.getElementById("result").className = "";
     clearInterval(stopInterval);
 
-    let start = 0;
-    if (tries === 2) start = 3;
-    if (tries === 3) start = 0;
-
-    currentAnime.startTime = start;
+    let [start, end] = tryDurations[n - 1];
 
     player.loadVideoById({
       videoId: currentAnime.videoId,
       startSeconds: start,
-      endSeconds: start + tryDurations[tries - 1]
+      endSeconds: end
     });
+    player.setVolume(50); // volume à 50%
     player.playVideo();
 
-    if (tries === 1) {
-      document.getElementById("playTry1").disabled = true;
-      document.getElementById("playTry2").disabled = false;
-      document.getElementById("playTry3").disabled = true;
-    } else if (tries === 2) {
-      document.getElementById("playTry1").disabled = true;
-      document.getElementById("playTry2").disabled = true;
-      document.getElementById("playTry3").disabled = false;
-    } else if (tries === 3) {
-      document.getElementById("playTry1").disabled = true;
-      document.getElementById("playTry2").disabled = true;
-      document.getElementById("playTry3").disabled = true;
-    }
+    // Activation / désactivation des boutons
+    document.getElementById("playTry1").disabled = tries >= 1;
+    document.getElementById("playTry2").disabled = tries < 1 || tries >= 2;
+    document.getElementById("playTry3").disabled = tries < 2 || tries >= 3;
   }
 
   function checkAnswer(selectedTitle) {
+    if (attemptsThisTry) return; // une seule tentative par écoute
+    attemptsThisTry = true;
+
     const inputVal = selectedTitle.toLowerCase();
     if (currentAnime.altTitles.includes(inputVal)) {
-      document.getElementById("result").textContent = `✅ Bravo ! C’est ${currentAnime.title} - ${currentAnime.opening}`;
-      document.getElementById("result").className = "correct";
-      blockInputs();
-      showNextButton();
+      showResult(true);
     } else {
       failedAnswers.push(selectedTitle);
       updateFailedAttempts();
       if (tries >= maxTries) {
         revealAnswer();
       } else {
-        document.getElementById("guessInput").disabled = true;
+        showResult(false);
       }
+    }
+  }
+
+  function showResult(correct) {
+    const resultDiv = document.getElementById("result");
+    if (correct) {
+      resultDiv.textContent = `✅ Bravo ! C’est ${currentAnime.title} - ${currentAnime.youtubeTitle}`;
+      resultDiv.className = "correct";
+      blockInputs();
+      showNextButton();
+    } else {
+      resultDiv.textContent = `❌ Mauvaise réponse, essaie lors de la prochaine écoute.`;
+      resultDiv.className = "incorrect";
     }
   }
 
@@ -276,8 +293,8 @@
 
   function revealAnswer() {
     const resultDiv = document.getElementById("result");
-    resultDiv.textContent = `🔔 Réponse : ${currentAnime.title} - ${currentAnime.opening}`;
-    resultDiv.className = "incorrect";
+    resultDiv.textContent = `🔔 Réponse : ${currentAnime.title} - ${currentAnime.youtubeTitle}`;
+    resultDiv.className = "";
     blockInputs();
     showNextButton();
   }
@@ -293,51 +310,60 @@
     document.getElementById("nextBtn").style.display = "inline-block";
   }
 
-  function nextAnime() {
-    // Arrête la vidéo si elle est en cours
-    if(player && player.stopVideo) {
-      player.stopVideo();
-    }
+  document.getElementById("playTry1").addEventListener("click", () => playTry(1));
+  document.getElementById("playTry2").addEventListener("click", () => playTry(2));
+  document.getElementById("playTry3").addEventListener("click", () => playTry(3));
+
+  document.getElementById("nextBtn").addEventListener("click", () => {
+    if (player && player.stopVideo) player.stopVideo();
     currentIndex++;
     if (currentIndex >= animeList.length) {
-      alert("Fin du quiz ! Merci d'avoir joué.");
+      alert("Félicitations, tu as terminé toutes les questions !");
       currentIndex = 0;
     }
     currentAnime = animeList[currentIndex];
     resetControls();
-  }
+    document.getElementById("failedAttempts").textContent = "";
+  });
 
-  document.getElementById("playTry1").addEventListener("click", () => playTry(1));
-  document.getElementById("playTry2").addEventListener("click", () => playTry(2));
-  document.getElementById("playTry3").addEventListener("click", () => playTry(3));
-  document.getElementById("nextBtn").addEventListener("click", () => nextAnime());
+  // Input autocomplete + gestion saisie
+  const guessInput = document.getElementById("guessInput");
+  let uniqueTitles = [];
 
-  const input = document.getElementById("guessInput");
-  input.addEventListener("input", function() {
+  guessInput.addEventListener("input", onInput);
+
+  function onInput(e) {
+    const val = e.target.value.toLowerCase();
     closeAllLists();
-    if (!this.value) return false;
-    const val = this.value.toLowerCase();
-    const list = document.getElementById("autocomplete-list");
-    const uniqueTitles = [...new Set(animeList.map(a => a.title))];
+    if (!val) return false;
+    const listDiv = document.getElementById("autocomplete-list");
+    let count = 0;
     uniqueTitles.forEach(title => {
-      if (title.toLowerCase().startsWith(val)) {
+      if (title.toLowerCase().includes(val) && count < 5) {
         const item = document.createElement("div");
-        item.innerHTML = "<strong>" + title.substr(0, val.length) + "</strong>" + title.substr(val.length);
-        item.addEventListener("click", function() {
-          input.value = title;
+        item.textContent = title;
+        item.addEventListener("click", () => {
+          guessInput.value = title;
           closeAllLists();
           checkAnswer(title);
         });
-        list.appendChild(item);
+        listDiv.appendChild(item);
+        count++;
       }
     });
-  });
-  function closeAllLists() {
-    const list = document.getElementById("autocomplete-list");
-    while (list.firstChild) list.removeChild(list.firstChild);
   }
-  document.addEventListener("click", (e) => {
-    if (e.target !== input) closeAllLists();
+
+  function closeAllLists() {
+    const listDiv = document.getElementById("autocomplete-list");
+    while (listDiv.firstChild) {
+      listDiv.removeChild(listDiv.firstChild);
+    }
+  }
+
+  document.addEventListener("click", function(e) {
+    if (e.target !== guessInput) {
+      closeAllLists();
+    }
   });
 </script>
 </body>
