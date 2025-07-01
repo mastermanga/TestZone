@@ -1,94 +1,94 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Guess The Anime Opening</title>
-<style>
-  html, body {
-    height: 100%;
-    margin: 0;
-  }
-  body {
-    background: #121212;
-    color: #eee;
-    font-family: Arial, sans-serif;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    min-height: 100vh;
-    padding: 1rem;
-  }
-  #container {
-    max-width: 480px;
-    width: 100%;
-  }
-  button {
-    margin: 0.3rem;
-    padding: 0.5rem 1rem;
-    background: #333;
-    color: #eee;
-    border: none;
-    cursor: pointer;
-    border-radius: 4px;
-  }
-  button:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
-  input {
-    padding: 0.5rem;
-    font-size: 1rem;
-    width: 300px;
-    margin-right: 1rem;
-    border-radius: 4px;
-    border: 1px solid #444;
-    background: #222;
-    color: #eee;
-  }
-  #result {
-    margin-top: 1rem;
-    font-weight: bold;
-  }
-  #result.correct {
-    color: #4caf50;
-  }
-  #result.incorrect {
-    color: #f44336;
-  }
-  #timer {
-    margin-top: 1rem;
-    font-size: 1.2rem;
-    font-weight: bold;
-    color: #ff9800;
-    display: none;
-  }
-  .autocomplete-items {
-    position: absolute;
-    border: 1px solid #444;
-    border-top: none;
-    z-index: 99;
-    top: 55px;
-    left: 0;
-    right: 0;
-    background: #222;
-    max-height: 150px;
-    overflow-y: auto;
-    border-radius: 0 0 4px 4px;
-  }
-  .autocomplete-items div {
-    padding: 8px;
-    cursor: pointer;
-  }
-  .autocomplete-items div:hover {
-    background-color: #555;
-  }
-  .autocomplete {
-    position: relative;
-    display: inline-block;
-  }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Guess The Anime Opening</title>
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+    }
+    body {
+      background: #121212;
+      color: #eee;
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      min-height: 100vh;
+      padding: 1rem;
+    }
+    #container {
+      max-width: 480px;
+      width: 100%;
+    }
+    button {
+      margin: 0.3rem;
+      padding: 0.5rem 1rem;
+      background: #333;
+      color: #eee;
+      border: none;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    input {
+      padding: 0.5rem;
+      font-size: 1rem;
+      width: 300px;
+      margin-right: 1rem;
+      border-radius: 4px;
+      border: 1px solid #444;
+      background: #222;
+      color: #eee;
+    }
+    #result {
+      margin-top: 1rem;
+      font-weight: bold;
+    }
+    #result.correct {
+      color: #4caf50;
+    }
+    #result.incorrect {
+      color: #f44336;
+    }
+    #timer {
+      margin-top: 1rem;
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #ff9800;
+      display: none;
+    }
+    .autocomplete-items {
+      position: absolute;
+      border: 1px solid #444;
+      border-top: none;
+      z-index: 99;
+      top: 55px;
+      left: 0;
+      right: 0;
+      background: #222;
+      max-height: 150px;
+      overflow-y: auto;
+      border-radius: 0 0 4px 4px;
+    }
+    .autocomplete-items div {
+      padding: 8px;
+      cursor: pointer;
+    }
+    .autocomplete-items div:hover {
+      background-color: #555;
+    }
+    .autocomplete {
+      position: relative;
+      display: inline-block;
+    }
+  </style>
 </head>
 <body>
 
@@ -105,7 +105,6 @@
     <button id="playTry1" disabled>Écoute 1 (3s)</button>
     <button id="playTry2" disabled>Écoute 2 (5s)</button>
     <button id="playTry3" disabled>Écoute 3 (10s)</button>
-    <button id="skipBtn" disabled>Passer</button>
   </div>
 
   <div id="result"></div>
@@ -121,6 +120,13 @@
     const regExp = /^.*((youtu.be\/)|(v\/)|(watch\?))\??v?=?([^#&?]*).*/;
     const match = url.match(regExp);
     return (match && match[5].length === 11) ? match[5] : null;
+  }
+
+  function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
   }
 
   let animeList = [];
@@ -150,6 +156,8 @@
         alert("Aucun anime valide dans opening.json !");
         return;
       }
+
+      shuffleArray(animeList); // 👈 mélange des openings
 
       currentIndex = 0;
       currentAnime = animeList[currentIndex];
@@ -213,7 +221,6 @@
     document.getElementById("playTry1").disabled = false;
     document.getElementById("playTry2").disabled = true;
     document.getElementById("playTry3").disabled = true;
-    document.getElementById("skipBtn").disabled = true;
 
     document.getElementById("nextBtn").style.display = "none";
   }
@@ -226,12 +233,9 @@
     tries = n;
     document.getElementById("guessInput").disabled = false;
     document.getElementById("checkAnswerBtn").disabled = false;
-    document.getElementById("skipBtn").disabled = false;
     document.getElementById("result").textContent = "";
     document.getElementById("result").className = "";
-    document.getElementById("timer").style.display = "none";
     clearInterval(stopInterval);
-    document.getElementById("timer").textContent = "";
 
     player.loadVideoById({
       videoId: currentAnime.videoId,
@@ -258,13 +262,11 @@
     } else {
       resultDiv.textContent = `❌ Faux. Ce n'est pas "${document.getElementById("guessInput").value}".`;
       resultDiv.className = "incorrect";
+      document.getElementById("guessInput").disabled = true;
+      document.getElementById("checkAnswerBtn").disabled = true;
 
       if (tries >= maxTries) {
         revealAnswer();
-      } else {
-        document.getElementById("guessInput").disabled = false;
-        document.getElementById("checkAnswerBtn").disabled = false;
-        document.getElementById("skipBtn").disabled = false;
       }
     }
   }
@@ -275,21 +277,18 @@
     document.getElementById("playTry1").disabled = true;
     document.getElementById("playTry2").disabled = true;
     document.getElementById("playTry3").disabled = true;
-    document.getElementById("skipBtn").disabled = true;
   }
 
   function revealAnswer() {
     const resultDiv = document.getElementById("result");
-    document.getElementById("timer").style.display = "none";
-    resultDiv.textContent = `🔔 Temps écoulé ou tentatives épuisées ! La bonne réponse était : ${currentAnime.title} - ${currentAnime.opening}`;
+    resultDiv.textContent = `🔔 Réponse : ${currentAnime.title} - ${currentAnime.opening}`;
     resultDiv.className = "correct";
     blockInputs();
     showNextButton();
   }
 
   function showNextButton() {
-    const nextBtn = document.getElementById("nextBtn");
-    nextBtn.style.display = "inline-block";
+    document.getElementById("nextBtn").style.display = "inline-block";
   }
 
   function nextAnime() {
@@ -297,13 +296,14 @@
     if (currentIndex >= animeList.length) {
       alert("Fin du quiz ! Merci d'avoir joué.");
       currentIndex = 0;
+      shuffleArray(animeList);
     }
     currentAnime = animeList[currentIndex];
     resetControls();
     player.loadVideoById({
       videoId: currentAnime.videoId,
       startSeconds: currentAnime.startTime,
-      endSeconds: currentAnime.startTime + tryDurations[tryDurations.length - 1]
+      endSeconds: currentAnime.startTime + tryDurations[2]
     });
   }
 
@@ -311,7 +311,6 @@
   document.getElementById("playTry2").addEventListener("click", () => playTry(2));
   document.getElementById("playTry3").addEventListener("click", () => playTry(3));
   document.getElementById("checkAnswerBtn").addEventListener("click", checkAnswer);
-  document.getElementById("skipBtn").addEventListener("click", () => revealAnswer());
   document.getElementById("nextBtn").addEventListener("click", () => {
     document.getElementById("nextBtn").style.display = "none";
     nextAnime();
@@ -335,10 +334,12 @@
       }
     });
   });
+
   function closeAllLists() {
     const list = document.getElementById("autocomplete-list");
     while (list.firstChild) list.removeChild(list.firstChild);
   }
+
   document.addEventListener("click", (e) => {
     if (e.target !== input) closeAllLists();
   });
@@ -346,4 +347,3 @@
 
 </body>
 </html>
-
