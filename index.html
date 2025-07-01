@@ -64,7 +64,6 @@
     color: #ff9800;
     display: none;
   }
-  /* Styles autocomplétion */
   .autocomplete-items {
     position: absolute;
     border: 1px solid #444;
@@ -94,7 +93,6 @@
 <body>
 
 <div id="container">
-
   <h1>Guess The Anime Opening</h1>
 
   <div class="autocomplete">
@@ -114,7 +112,6 @@
   <div id="timer"></div>
   <button id="nextBtn" style="display:none; margin-top:1rem;">Suivant</button>
 
-  <!-- Player invisible -->
   <div id="playerWrapper" style="display:none;"></div>
 </div>
 
@@ -131,7 +128,7 @@
   let player;
   let stopInterval;
   let currentAnime;
-  let tries = 0; // nombre d'écoutes déjà jouées (1 à 3)
+  let tries = 0;
   const maxTries = 3;
   const tryDurations = [3, 5, 10];
 
@@ -193,7 +190,7 @@
       clearInterval(stopInterval);
       stopInterval = setInterval(() => {
         const currentTime = player.getCurrentTime();
-        if (currentTime >= (currentAnime.startTime + tryDurations[tries-1])) {
+        if (currentTime >= (currentAnime.startTime + tryDurations[tries - 1])) {
           player.pauseVideo();
           clearInterval(stopInterval);
         }
@@ -243,7 +240,6 @@
     });
     player.playVideo();
 
-    // Mise à jour boutons écoute
     document.getElementById("playTry1").disabled = tries >= 1;
     document.getElementById("playTry2").disabled = tries < 1 || tries >= 2;
     document.getElementById("playTry3").disabled = tries < 2 || tries >= 3;
@@ -255,28 +251,20 @@
     if (!inputVal) return;
 
     if (currentAnime.altTitles.includes(inputVal)) {
-      // Correct answer
       resultDiv.textContent = `✅ Bravo ! C’est ${currentAnime.title} - ${currentAnime.opening}`;
       resultDiv.className = "correct";
       blockInputs();
       showNextButton();
     } else {
-      // Incorrect answer
-      resultDiv.textContent = `❌ Faux. Ce n'est pas "${document.getElementById("guessInput").value}". ${tries < maxTries ? `Il vous reste ${maxTries - tries} tentative(s).` : ''}`;
+      resultDiv.textContent = `❌ Faux. Ce n'est pas "${document.getElementById("guessInput").value}".`;
       resultDiv.className = "incorrect";
-      
-      // Clear the input for the next guess
-      document.getElementById("guessInput").value = "";
-      
-      if (tries < maxTries) {
-        // Enable the next try button if available
-        document.getElementById(`playTry${tries + 1}`).disabled = false;
+
+      if (tries >= maxTries) {
+        revealAnswer();
+      } else {
         document.getElementById("guessInput").disabled = false;
         document.getElementById("checkAnswerBtn").disabled = false;
         document.getElementById("skipBtn").disabled = false;
-      } else {
-        // No more tries left, reveal the answer
-        revealAnswer();
       }
     }
   }
@@ -311,10 +299,7 @@
       currentIndex = 0;
     }
     currentAnime = animeList[currentIndex];
-
     resetControls();
-
-    // Recharge la vidéo dans le player
     player.loadVideoById({
       videoId: currentAnime.videoId,
       startSeconds: currentAnime.startTime,
@@ -322,16 +307,16 @@
     });
   }
 
-  // Gestion boutons écoute
   document.getElementById("playTry1").addEventListener("click", () => playTry(1));
   document.getElementById("playTry2").addEventListener("click", () => playTry(2));
   document.getElementById("playTry3").addEventListener("click", () => playTry(3));
   document.getElementById("checkAnswerBtn").addEventListener("click", checkAnswer);
-  document.getElementById("skipBtn").addEventListener("click", () => {
-    revealAnswer();
+  document.getElementById("skipBtn").addEventListener("click", () => revealAnswer());
+  document.getElementById("nextBtn").addEventListener("click", () => {
+    document.getElementById("nextBtn").style.display = "none";
+    nextAnime();
   });
 
-  // Autocomplete basique
   const input = document.getElementById("guessInput");
   input.addEventListener("input", function() {
     closeAllLists();
@@ -361,3 +346,4 @@
 
 </body>
 </html>
+
