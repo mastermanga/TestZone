@@ -99,7 +99,7 @@
 <div id="container">
   <h1>Guess The Anime Opening</h1>
   <div class="autocomplete">
-    <input id="guessInput" placeholder="Devinez le nom de l'anime" autocomplete="off" />
+    <input id="guessInput" placeholder="Devinez le nom de l'anime" autocomplete="off" disabled />
     <div id="autocomplete-list" class="autocomplete-items"></div>
   </div>
   <div style="margin-top:1rem;">
@@ -121,6 +121,7 @@
     return (match && match[5].length === 11) ? match[5] : null;
   }
   let animeList = [];
+  let uniqueTitles = [];
   let currentIndex = 0;
   let player;
   let stopInterval;
@@ -129,6 +130,7 @@
   const maxTries = 3;
   const tryDurations = [3, 5, 10];
   let failedAnswers = [];
+  let hasGuessedThisTry = false;
 
   fetch('opening.json')
     .then(res => res.json())
@@ -142,6 +144,10 @@
           startTime: 0
         }))
       ).filter(a => a.videoId);
+
+      // Extract unique titles for autocomplete
+      uniqueTitles = [...new Set(animeList.map(a => a.title))];
+
       shuffle(animeList);
       currentIndex = 0;
       currentAnime = animeList[currentIndex];
@@ -187,6 +193,7 @@
 
   function resetControls() {
     tries = 0;
+    hasGuessedThisTry = false;
     failedAnswers = [];
     updateFailedAttempts();
     document.getElementById("result").textContent = "";
@@ -194,7 +201,7 @@
     document.getElementById("timer").style.display = "none";
     document.getElementById("timer").textContent = "";
     document.getElementById("guessInput").value = "";
-    document.getElementById("guessInput").disabled = false;
+    document.getElementById("guessInput").disabled = true;
     document.getElementById("playTry1").disabled = false;
     document.getElementById("playTry2").disabled = true;
     document.getElementById("playTry3").disabled = true;
@@ -204,6 +211,7 @@
   function playTry(n) {
     if (n !== tries + 1) return alert("Vous devez écouter les extraits dans l'ordre.");
     tries = n;
+    hasGuessedThisTry = false;
     document.getElementById("guessInput").disabled = false;
     document.getElementById("result").textContent = "";
     document.getElementById("result").className = "";
@@ -222,6 +230,10 @@
   }
 
   function checkAnswer(selectedTitle) {
+    if (hasGuessedThisTry) return;
+    hasGuessedThisTry = true;
+    document.getElementById("guessInput").disabled = true;
+
     const inputVal = selectedTitle.toLowerCase();
     if (currentAnime.altTitles.includes(inputVal)) {
       document.getElementById("result").textContent = `✅ Bravo ! C’est ${currentAnime.title} - ${currentAnime.opening}`;
@@ -281,26 +293,29 @@
     if (!this.value) return false;
     const val = this.value.toLowerCase();
     const list = document.getElementById("autocomplete-list");
-    animeList.forEach(anime => {
-      if (anime.title.toLowerCase().startsWith(val)) {
+    uniqueTitles.forEach(title => {
+      if (title.toLowerCase().startsWith(val)) {
         const item = document.createElement("div");
-        item.innerHTML = "<strong>" + anime.title.substr(0, val.length) + "</strong>" + anime.title.substr(val.length);
+        item.innerHTML = "<strong>" + title.substr(0, val.length) + "</strong>" + title.substr(val.length);
         item.addEventListener("click", function() {
-          input.value = anime.title;
+          input.value = title;
           closeAllLists();
-          checkAnswer(anime.title);
+          checkAnswer(title);
         });
         list.appendChild(item);
       }
     });
   });
+
   function closeAllLists() {
     const list = document.getElementById("autocomplete-list");
     while (list.firstChild) list.removeChild(list.firstChild);
   }
+
   document.addEventListener("click", (e) => {
     if (e.target !== input) closeAllLists();
   });
 </script>
 </body>
 </html>
+
