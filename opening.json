@@ -1,0 +1,33 @@
+[
+  {
+    "title": "My Hero Academia",
+    "youtubeUrls": [
+      "https://www.youtube.com/watch?v=L1FdEBTJXus"
+    ]
+  },
+  {
+    "title": "Hunter X Hunter",
+    "youtubeUrls": [
+      "https://www.youtube.com/watch?v=faqmNf_fZlE"
+    ]
+  },
+  {
+    "title": "Naruto",
+    "youtubeUrls": [
+      "https://www.youtube.com/watch?v=vxvP9zSOL7s",
+      "https://youtu.be/zVgKnfN9i34?list=PLRe9ARNnYSY41I4NXMtfHQ2HN2wap_YtX"
+    ]
+  },
+  {
+    "title": "Attack on Titan",
+    "youtubeUrls": [
+      "https://www.youtube.com/watch?v=8OkpRK2_gVs"
+    ]
+  },
+  {
+    "title": "Jujutsu Kaisen",
+    "youtubeUrls": [
+      "https://www.youtube.com/watch?v=GwaRztMaoY0"
+    ]
+  }
+]
