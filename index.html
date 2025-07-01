@@ -1,98 +1,99 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Guess The Anime Opening</title>
-  <style>
-    html, body {
-      height: 100%;
-      margin: 0;
-    }
-    body {
-      background: #121212;
-      color: #eee;
-      font-family: Arial, sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      text-align: center;
-      min-height: 100vh;
-      padding: 1rem;
-    }
-    #container {
-      max-width: 480px;
-      width: 100%;
-    }
-    button {
-      margin: 0.3rem;
-      padding: 0.5rem 1rem;
-      background: #333;
-      color: #eee;
-      border: none;
-      cursor: pointer;
-      border-radius: 4px;
-    }
-    button:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-    }
-    input {
-      padding: 0.5rem;
-      font-size: 1rem;
-      width: 300px;
-      margin-right: 1rem;
-      border-radius: 4px;
-      border: 1px solid #444;
-      background: #222;
-      color: #eee;
-    }
-    #result {
-      margin-top: 1rem;
-      font-weight: bold;
-    }
-    #result.correct {
-      color: #4caf50;
-    }
-    #result.incorrect {
-      color: #f44336;
-    }
-    #timer {
-      margin-top: 1rem;
-      font-size: 1.2rem;
-      font-weight: bold;
-      color: #ff9800;
-      display: none;
-    }
-    .autocomplete-items {
-      position: absolute;
-      border: 1px solid #444;
-      border-top: none;
-      z-index: 99;
-      top: 55px;
-      left: 0;
-      right: 0;
-      background: #222;
-      max-height: 150px;
-      overflow-y: auto;
-      border-radius: 0 0 4px 4px;
-    }
-    .autocomplete-items div {
-      padding: 8px;
-      cursor: pointer;
-    }
-    .autocomplete-items div:hover {
-      background-color: #555;
-    }
-    .autocomplete {
-      position: relative;
-      display: inline-block;
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Guess The Anime Opening</title>
+<style>
+  html, body {
+    height: 100%;
+    margin: 0;
+  }
+  body {
+    background: #121212;
+    color: #eee;
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    min-height: 100vh;
+    padding: 1rem;
+  }
+  #container {
+    max-width: 480px;
+    width: 100%;
+  }
+  button {
+    margin: 0.3rem;
+    padding: 0.5rem 1rem;
+    background: #333;
+    color: #eee;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+  }
+  button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  input {
+    padding: 0.5rem;
+    font-size: 1rem;
+    width: 300px;
+    margin-right: 1rem;
+    border-radius: 4px;
+    border: 1px solid #444;
+    background: #222;
+    color: #eee;
+  }
+  #result {
+    margin-top: 1rem;
+    font-weight: bold;
+  }
+  #result.correct {
+    color: #4caf50;
+  }
+  #result.incorrect {
+    color: #f44336;
+  }
+  #timer {
+    margin-top: 1rem;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #ff9800;
+    display: none;
+  }
+  .autocomplete-items {
+    position: absolute;
+    border: 1px solid #444;
+    border-top: none;
+    z-index: 99;
+    top: 55px;
+    left: 0;
+    right: 0;
+    background: #222;
+    max-height: 150px;
+    overflow-y: auto;
+    border-radius: 0 0 4px 4px;
+  }
+  .autocomplete-items div {
+    padding: 8px;
+    cursor: pointer;
+  }
+  .autocomplete-items div:hover {
+    background-color: #555;
+  }
+  .autocomplete {
+    position: relative;
+    display: inline-block;
+  }
+</style>
 </head>
 <body>
 
 <div id="container">
+
   <h1>Guess The Anime Opening</h1>
 
   <div class="autocomplete">
@@ -122,13 +123,6 @@
     return (match && match[5].length === 11) ? match[5] : null;
   }
 
-  function shuffleArray(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [array[i], array[j]] = [array[j], array[i]];
-    }
-  }
-
   let animeList = [];
   let currentIndex = 0;
   let player;
@@ -138,11 +132,15 @@
   const maxTries = 3;
   const tryDurations = [3, 5, 10];
 
+  function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+  }
+
   fetch('opening.json')
-    .then(res => {
-      if (!res.ok) throw new Error('Erreur chargement JSON');
-      return res.json();
-    })
+    .then(res => res.json())
     .then(data => {
       animeList = data.map(anime => ({
         title: anime.title,
@@ -152,24 +150,15 @@
         startTime: 0
       })).filter(a => a.videoId !== null);
 
-      if (animeList.length === 0) {
-        alert("Aucun anime valide dans opening.json !");
-        return;
-      }
+      shuffleArray(animeList);
 
-      shuffleArray(animeList); // 👈 mélange des openings
-
-      currentIndex = 0;
-      currentAnime = animeList[currentIndex];
+      currentAnime = animeList[0];
 
       if (typeof YT === 'undefined' || typeof YT.Player === 'undefined') {
         window.onYouTubeIframeAPIReady = initPlayer;
       } else {
         initPlayer();
       }
-    })
-    .catch(err => {
-      alert("Erreur lors du chargement du fichier opening.json : " + err);
     });
 
   function initPlayer() {
@@ -235,6 +224,7 @@
     document.getElementById("checkAnswerBtn").disabled = false;
     document.getElementById("result").textContent = "";
     document.getElementById("result").className = "";
+    document.getElementById("timer").style.display = "none";
     clearInterval(stopInterval);
 
     player.loadVideoById({
@@ -254,6 +244,13 @@
     const resultDiv = document.getElementById("result");
     if (!inputVal) return;
 
+    const match = animeList.find(anime => anime.altTitles.includes(inputVal));
+    if (!match) {
+      resultDiv.textContent = `❌ "${document.getElementById("guessInput").value}" n’est pas un titre valide.`;
+      resultDiv.className = "incorrect";
+      return;
+    }
+
     if (currentAnime.altTitles.includes(inputVal)) {
       resultDiv.textContent = `✅ Bravo ! C’est ${currentAnime.title} - ${currentAnime.opening}`;
       resultDiv.className = "correct";
@@ -262,10 +259,11 @@
     } else {
       resultDiv.textContent = `❌ Faux. Ce n'est pas "${document.getElementById("guessInput").value}".`;
       resultDiv.className = "incorrect";
-      document.getElementById("guessInput").disabled = true;
-      document.getElementById("checkAnswerBtn").disabled = true;
+      blockInputs();
 
-      if (tries >= maxTries) {
+      if (tries < maxTries) {
+        // Ne rien faire, l’utilisateur peut encore écouter
+      } else {
         revealAnswer();
       }
     }
@@ -281,8 +279,8 @@
 
   function revealAnswer() {
     const resultDiv = document.getElementById("result");
-    resultDiv.textContent = `🔔 Réponse : ${currentAnime.title} - ${currentAnime.opening}`;
-    resultDiv.className = "correct";
+    resultDiv.textContent = `🔔 Tentatives épuisées ! La bonne réponse était : ${currentAnime.title} - ${currentAnime.opening}`;
+    resultDiv.className = "incorrect";
     blockInputs();
     showNextButton();
   }
@@ -303,7 +301,7 @@
     player.loadVideoById({
       videoId: currentAnime.videoId,
       startSeconds: currentAnime.startTime,
-      endSeconds: currentAnime.startTime + tryDurations[2]
+      endSeconds: currentAnime.startTime + tryDurations[tryDurations.length - 1]
     });
   }
 
@@ -317,7 +315,7 @@
   });
 
   const input = document.getElementById("guessInput");
-  input.addEventListener("input", function() {
+  input.addEventListener("input", function () {
     closeAllLists();
     if (!this.value) return false;
     const val = this.value.toLowerCase();
@@ -326,7 +324,7 @@
       if (anime.title.toLowerCase().startsWith(val)) {
         const item = document.createElement("div");
         item.innerHTML = "<strong>" + anime.title.substr(0, val.length) + "</strong>" + anime.title.substr(val.length);
-        item.addEventListener("click", function() {
+        item.addEventListener("click", function () {
           input.value = anime.title;
           closeAllLists();
         });
