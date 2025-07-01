@@ -255,7 +255,7 @@
   function checkAnswer(selectedTitle) {
     const inputVal = selectedTitle.toLowerCase();
     if (currentAnime.altTitles.includes(inputVal)) {
-      document.getElementById("result").textContent = `✅ Bravo ! C’est ${currentAnime.title} - ${currentAnime.opening}`;
+      document.getElementById("result").textContent = `✅ Bravo ! C’est ${currentAnime.title}`;
       document.getElementById("result").className = "correct";
       blockInputs();
       showNextButton();
@@ -276,7 +276,7 @@
 
   function revealAnswer() {
     const resultDiv = document.getElementById("result");
-    resultDiv.textContent = `🔔 Réponse : ${currentAnime.title} - ${currentAnime.opening}`;
+    resultDiv.textContent = `🔔 Réponse : ${currentAnime.title}`;
     resultDiv.className = "incorrect";
     blockInputs();
     showNextButton();
